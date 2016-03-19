@@ -6,8 +6,6 @@
    var mail_url = "{% url 'ajax_mail' %}";
    var pass_url = "{% url 'ajax_pass' %}";
    var check_url = "{% url 'ajax_check_pass' %}";
-
-
 </script>
 {% endblock %}
 
@@ -45,7 +43,7 @@
 	</div>
 
 
-	<button class="btn btn-primary" type="submit">Зарегистрироваться</button>
+	<button class="btn btn-danger" type="submit" disabled="disabled">Зарегистрироваться</button>
 	{% csrf_token %}
 </form>
 {% endblock %}

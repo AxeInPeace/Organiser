@@ -1,4 +1,3 @@
-
 $(document).ready(function() {
     $(".js-mail").on('input', check_mail);
     $(".js-pass").on('input', check_pass);
@@ -11,13 +10,16 @@ var implement_answer = function(json_obj, div){
         $(div).find(".help-block").addClass("hide");
         $(div).find(".glyphicon-remove").addClass("hide");
         $(div).find(".glyphicon-ok").removeClass("hide");
+        $("button").addClass("btn-success").removeClass("btn-danger").removeAttr("disabled", "disabled");
     }
     else {
         $(div).removeClass("has-success").addClass("has-error");
         $(div).find(".help-block").removeClass("hide");
         $(div).find(".glyphicon-remove").removeClass("hide");
         $(div).find(".glyphicon-ok").addClass("hide");
+        $("button").removeClass("btn-success").addClass("btn-danger").attr("disabled", "False");
     }
+
 };
 
 var check_mail = function (){
