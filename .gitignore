@@ -1,0 +1,7 @@
+*~
+*.pyc
+*__pycache__/
+.idea/
+settings.py
+db.sqlite3
+

@@ -1,0 +1,52 @@
+{% extends "maintemp.html" %}
+{% load staticfiles %}
+{% block includes %}
+<script type="text/javascript" src="{% static 'signup.js' %}"></script>
+<script type="text/javascript">
+   var mail_url = "{% url 'ajax_mail' %}";
+   var pass_url = "{% url 'ajax_pass' %}";
+   var check_url = "{% url 'ajax_check_pass' %}";
+
+
+</script>
+{% endblock %}
+
+{% block title %}Регистрация{% endblock %}
+
+{% block content %}
+<form id="signup" method="post" action="{% url 'signup' %}">
+	<div class="form-group has-feedback div-mail">
+		<label class="control-label">E-mail</label>
+		<input type="email" class="form-control js-mail" name="mail">
+		<span class="glyphicon glyphicon-ok form-control-feedback hide" aria-hidden="true"></span>
+		<span class="glyphicon glyphicon-remove form-control-feedback hide" aria-hidden="true"></span>
+		<span class="help-block hide">Пользователь с таким почтовым адресом уже зарегестрирован</span>
+	</div>
+	<div class="form-group has-feedback div-pass">
+		<label class="control-label">Пароль</label>
+		<input type="password" class="form-control js-pass" name="pass">
+		<span class="glyphicon glyphicon-ok form-control-feedback hide" aria-hidden="true"></span>
+		<span class="glyphicon glyphicon-remove form-control-feedback hide" aria-hidden="true"></span>
+		<span class="help-block hide">Пароль должен содержать заглавные, строчные буквы и цифры.</span>
+		<span class="help-block hide">Пароль должен состоять не менее чем из семи символов</span>
+	</div>
+	<div class="form-group has-feedback div-repeat">
+		<label class="control-label">Повторите пароль</label>
+		<input type="password" class="form-control js-check" name="passcheck">
+		<span class="glyphicon glyphicon-ok form-control-feedback hide" aria-hidden="true"></span>
+		<span class="glyphicon glyphicon-remove form-control-feedback hide" aria-hidden="true"></span>
+		<span class="help-block hide">Введённые пароли не совпадают</span>
+	</div>
+	<div class="form-group has-feedback">
+		<label class="control-label">Имя (не обязательно)</label>
+		<input type="text" class="form-control" name="login">
+		<span class="glyphicon glyphicon-ok form-control-feedback hide" aria-hidden="true"></span>
+		<span class="glyphicon glyphicon-remove form-control-feedback hide" aria-hidden="true"></span>
+	</div>
+
+
+	<button class="btn btn-primary" type="submit">Зарегистрироваться</button>
+	{% csrf_token %}
+</form>
+{% endblock %}
+

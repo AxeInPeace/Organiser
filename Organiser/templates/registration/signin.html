@@ -1,0 +1,31 @@
+{% extends "maintemp.html" %}
+
+{% block title %}Вход{% endblock %}
+
+{% block content %}
+<p>{{ message }}</p>
+<div class="jumbotron">
+	<h2>Вход</h2>
+	<form id="signup" method="post" action="{% url 'signin' %}">
+		<div class="form-horizontal">
+			<div class="form-group form-group-lg">
+				<label class="col-sm-2 control-label">Email</label>
+				<div class="col-sm-5">
+					<input type="email" name="mail" class="form-control"/>
+				</div>
+			</div>
+			<div class="form-group form-group-lg">
+				<label class="col-sm-2 control-label">Пароль</label>
+				<div class="col-sm-5">
+					<input type="password" name="pass" class="form-control"/>
+				</div>
+			</div>
+			<div class="form-group">
+				<div class="col-sm-offset-2 col-sm-10">
+					<button class="btn btn-primary btn-lg" type="submit">Вход</button>
+				</div>
+				{% csrf_token %}
+			</div>
+	</form>
+</div>
+{% endblock %}

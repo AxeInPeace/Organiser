@@ -1,0 +1,12 @@
+{% extends "maintemp.html" %}
+
+{% block title %}Приветствие{% endblock %}
+
+{% block content %}
+
+	<p>{{ message }}</p>
+	{% if user != None %}
+		<p>Добро пожаловать, {{ user }}</p>
+	{% endif %}
+
+{% endblock %}
