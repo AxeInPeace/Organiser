@@ -1,0 +1,17 @@
+<div class="form-group">
+	<label class="control-label col-sm-{{ size_per_label }}">Дата</label>
+	<div class="col-sm-{{ size_per_field }}">
+		<input id="{{ field_name_date }}" data-format="DD-MM-YYYY" data-template="D MMM YYYY" name="{{ field_name_date }}" value="26-03-2016" type="text">
+	</div>
+</div>
+
+{% include 'fields/time_field.html' with size_per_label=size_per_label size_per_field=size_per_field field_name_time=field_name_time %}
+
+<script>
+  $(function(){
+    $('#{{ field_name_date }}').combodate({
+      minYear: 2016,
+			maxYear: 2018,
+    });
+  });
+</script>

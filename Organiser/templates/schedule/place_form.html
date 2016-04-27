@@ -1,0 +1,14 @@
+<div class="row">
+	<form id="add_place" method="post" action="{% url 'add_place' %}">
+		<div class="form-horizontal">
+			{% include 'fields/input_field.html' with size_per_label='3' size_per_field='9' field_label='Имя' field_type='text' field_name='name' %}
+			<div class="form-group">
+				<div class="col-sm-3"></div>
+				<div class="col-sm-3">
+					<button class="btn btn-default" type="submit">Добавить место</button>
+				</div>
+			</div>
+		</div>
+		{% csrf_token %}
+	</form>
+</div>

@@ -1,0 +1,32 @@
+<div class="row">
+	<form id="add_task" method="post" action="{% url 'add_task' %}">
+		<div class="form-horizontal">
+			{% include 'fields/input_field.html' with size_per_label='3' size_per_field='9' field_label='Имя' field_type='text' field_name='name' %}
+			<div class="form-group">
+				<div class="col-sm-3"></div>
+				<label class="control-label col-sm-{{ size_per_label }}">Длительность задачи</label>
+			</div>
+			{% include 'fields/time_field.html' with size_per_label='3' size_per_field='9' field_name_time='duration' %}
+			<div class="form-group">
+				<div class="col-sm-3"></div>
+				<label class="control-label col-sm-{{ size_per_label }}">Крайний срок</label>
+			</div>
+			{% include 'fields/date_time_field.html' with size_per_label='3' size_per_field='9' field_name_date='deadline_date' field_name_time='deadline_time' %}
+			{% include 'fields/select_field.html' with size_per_label='3' field_label='Место' size_per_field='9' field_name='place' set=places help_text='Выберите из списка место в котором необходимо выполнить задачу' %}
+			<div class="form-group">
+				<div class="col-sm-3"></div>
+				<div class="col-sm-9">
+					<a href="#place" aria-controls="place" role="tab" data-toggle="tab"><button type="button" class="btn">Новое место</button></a>
+				</div>
+			</div>
+
+			<div class="form-group">
+				<div class="col-sm-3"></div>
+				<div class="col-sm-3">
+					<button class="btn btn-default" type="submit">Добавить задачу</button>
+				</div>
+			</div>
+		</div>
+		{% csrf_token %}
+	</form>
+</div>

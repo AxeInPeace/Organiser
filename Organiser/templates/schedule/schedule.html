@@ -1,11 +1,109 @@
 {% extends "maintemp.html" %}
+{% load staticfiles %}
 {% block includes %}
+<script type="text/javascript" src="{% static 'moment.js' %}"></script>
+<script type="text/javascript" src="{% static 'combodate.js' %}"></script>
 {% endblock %}
 
 {% block title %}Органайзер{% endblock %}
 
 {% block content %}
+<div class="row">
+	<div class="col-md-8">
+		<p>{{ message }}</p>
+		<div class="jumbotron">
+			<table border="3">
+				<tr>
+					<th>Понедельник</th>
+					<th>Вторник</th>
+					<th>Среда</th>
+					<th>Четверг</th>
+					<th>Пятница</th>
+					<th>Суббота</th>
+					<th>Воскресение</th>
+				</tr>
 
+				<tr style="position: relative;height: 400px; width:700px; overflow: hidden;">
+					{% for event in events %}
+					<td style="width: 100px; height: 400px">
+						{% for item in event %}
+						<div style="height: {{ item.space_before }}%;overflow: hidden; background-color: white;position: static;"></div>
+						<div style="position:static;height: {{ item.height }}%;overflow: hidden; background-color: {{ item.color }}">
 
+							<p data-toggle="tooltip" data-placement="top" title='Время начала: {{ item.start_time| date:"H i" }}<hr> Время конца:{{ item.end_time| date:"H i" }}'>
+								{{ item.name }}
+							</p>
+						</div>
+						{% endfor %}
+					</td>
+					{% endfor %}
+				</tr>
+
+			</table>
+
+			<a href="{% url 'generate_schedule' %}"><button class="btn">Составить расписание!</button></a>
+		</div>
+		<table class="table">
+			<tr>
+				<th>Имя</th>
+				<th>Длительность</th>
+				<th>Дедлайн</th>
+				<th>Начальное время</th>
+				<th>Конечное время</th>
+			</tr>
+			{% for task in tasks %}
+			<tr>
+				<td>{{ task.name }}</td>
+				<td>{{ task.longitude }}</td>
+				<td>{{ task.deadline | date:"m, d - H:i" }}</td>
+				<td>{{ task.start_time | date:"m, d - H:i" }}</td>
+				<td>{{ task.end_time | date:"m, d - H:i" }}</td>
+			</tr>
+			{% endfor %}
+		</table>
+	</div>
+	<div class="col-md-4">
+		<div class="bs-example bs-example-tabs" data-example-id="togglable-tabs">
+			<ul class="nav nav-tabs" role="tablist">
+				<li role="presentation" class="active">
+					<a href="#schedule" aria-controls="schedule" role="tab" data-toggle="tab">Расписание</a>
+				</li>
+
+				<li role="presentation">
+					<a href="#event" aria-controls="event" role="tab" data-toggle="tab">События</a>
+				</li>
+
+				<li role="presentation">
+					<a href="#task" aria-controls="task" role="tab" data-toggle="tab">Задачи</a>
+				</li>
+
+				<li role="presentation">
+					<a href="#place" aria-controls="place" role="tab" data-toggle="tab">Место</a>
+				</li>
+			</ul>
+
+			<div class="tab-content">
+				<div role="tabpanel" class="tab-pane active" id="schedule">
+					{% include 'schedule/schedule_form.html' %}
+				</div>
+				<div role="tabpanel" class="tab-pane" id="task">
+					{% include 'schedule/task_form.html' %}
+				</div>
+				<div role="tabpanel" class="tab-pane" id="event">
+					{% include 'schedule/event_form.html' %}
+				</div>
+				<div role="tabpanel" class="tab-pane" id="place">
+					{% include 'schedule/place_form.html' %}
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script>
+$(function () {
+  $('[data-toggle="tooltip"]').tooltip({html: true})
+})
+</script>
 {% endblock %}
 
