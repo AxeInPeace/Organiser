@@ -1,0 +1,83 @@
+{% extends "maintemp.html" %}
+{% load staticfiles %}
+{% block includes %}
+<script type="text/javascript" src="{% static 'moment.js' %}"></script>
+<script type="text/javascript" src="{% static 'combodate.js' %}"></script>
+{% endblock %}
+
+{% block title %}Задачи{% endblock %}
+
+{% block content %}
+<div class="row">
+	<p>{{ message }}</p>
+
+	<div class="col-md-2">
+
+	</div>
+
+	<div class="col-md-8">
+
+		<form id="change_task" method="post" action="{% url 'change_tasks' %}">
+			<div class="form-horizontal">
+				<div class="form-group">
+				{% include 'fields/select_field.html' with set=tasks field_label='Задача' default_option='Выберите задачу' class="choose_task" field_name='task_id' %}
+						<button class="btn btn-default delete_task" type="button">Удалить задачу</button>
+				</div>
+			</div>
+
+			<div class="form-horizontal">
+				{% include 'fields/input_field.html' with size_per_label='3' size_per_field='9' field_label='Имя' field_type='text' field_name='name' %}
+				<div class="form-group">
+					<div class="col-sm-3"></div>
+					<label class="control-label col-sm-{{ size_per_label }}">Длительность задачи</label>
+				</div>
+				{% include 'fields/time_field.html' with size_per_label='3' size_per_field='9' field_name_time='duration' %}
+				<div class="form-group">
+					<div class="col-sm-3"></div>
+					<label class="control-label col-sm-{{ size_per_label }}">Крайний срок</label>
+				</div>
+				{% include 'fields/date_time_field.html' with size_per_label='3' size_per_field='9' field_name_date='deadline_date' field_name_time='deadline_time' %}
+				{% include 'fields/select_field.html' with size_per_label='3' field_label='Место' size_per_field='9' field_name='place' set=places help_text='Выберите из списка место в котором необходимо выполнить задачу' class='add_place' %}
+				<div class="form-group">
+					<div class="col-sm-3"></div>
+					<div class="col-sm-9">
+						<button type="button" class="btn" data-toggle="modal" data-target="#add_place">Новое место</button>
+					</div>
+				</div>
+
+				<div class="form-group">
+					<div class="col-sm-3"></div>
+					<div class="col-sm-3">
+						<button class="btn btn-default" type="submit">Изменить задачу</button>
+					</div>
+				</div>
+			</div>
+			{% csrf_token %}
+		</form>
+	</div>
+
+	<div class="col-md-2">
+
+	</div>
+</div>
+
+
+<script>
+	$(".delete_task").click(function(){
+		task_id = $("select,choose_task").val();
+
+		if (parseInt(task_id) == -1)
+			return;
+		else
+			$.ajax({
+				url: "{% url 'delete_task' %}",
+				async: false,
+				data: {
+					task_id: task_id,
+				},
+			});
+			cur_option = $("select.choose_task");
+			$("select.choose_task :selected").remove();
+	});
+</script>
+{% endblock %}

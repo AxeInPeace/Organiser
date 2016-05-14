@@ -1,0 +1,125 @@
+{% extends "maintemp.html" %}
+{% load staticfiles %}
+{% block includes %}
+<script type="text/javascript" src="{% static 'moment.js' %}"></script>
+<script type="text/javascript" src="{% static 'combodate.js' %}"></script>
+{% endblock %}
+
+{% block title %}Места{% endblock %}
+
+{% block content %}
+<div class="row">
+	<p>{{ message }}</p>
+
+	<div class="col-md-1"></div>
+
+	<div class="col-md-4">
+		<h2>Отредактировать место</h2>
+		<form id="place_change" method="post" action="{% url 'change_places' %}">
+			<div class="form-horizontal">
+				<div class="form-group">
+					{% include 'fields/select_field.html' with set=places field_label='Место' default_option='Выберите место' class="place place_change" field_name='place_change_id' size_per_label='2' size_per_field='7' %}
+					<div class="col-sm-2">
+						<button class="btn btn-default delete_place" type="button">Удалить событие</button>
+					</div>
+				</div>
+			</div>
+			<div class="form-horizontal">
+				<div class="form-group">
+					{% include 'fields/input_field.html' with size_per_label='2' size_per_field='10' field_label='Имя' field_type='text' field_name='place_name'%}
+				</div>
+			</div>
+			<div class="form-horizontal">
+				<div class="form-group">
+					<button class="btn btn-default" type="submit">Изменить место</button>
+				</div>
+			</div>
+			{% csrf_token %}
+		</form>
+	</div>
+	<div class="col-md-1"></div>
+	<div class="col-md-4">
+		<h2>Время между местами</h2>
+		<form id="time_places" method="post" action="{% url 'time_places' %}">
+			<div class="form-horizontal">
+				<div class="form-group">
+					{% include 'fields/select_field.html' with set=places field_label='Первое место' default_option='Выберите место' class="place time_place" field_name='time_place_1' %}
+					{% include 'fields/select_field.html' with set=places field_label='Второе место' default_option='Выберите место' class="place time_place" field_name='time_place_2' %}
+				</div>
+			</div>
+			<div class="form-horizontal">
+				{% include 'fields/time_field.html' with size_per_label='3' size_per_field='9' field_name_time='time_between_places' %}
+			</div>
+
+			<div class="form-horizontal">
+				<div class="form-group">
+					<button class="btn btn-default" type="submit">Утвердить время</button>
+				</div>
+			</div>
+
+			{% csrf_token %}
+		</form>
+	</div>
+
+	<div class="col-md-2"></div>
+</div>
+<hr>
+<div class="row">
+	<div class="col-md-1"></div>
+	<div class="col-md-9">
+		<table class="table">
+			<tr>
+				<th></th>
+				{% for s_p in places %}
+					<th>{{ s_p.name }}</th>
+				{% endfor %}
+			</tr>
+			{% for f_p in places %}
+				<tr>
+					<th>{{ f_p.name }}</th>
+					{% for s_p in places %}
+						<td>
+							{% if f_p == s_p %}
+								<p>-</p>
+							{% else %}
+								{% for key, dict in dist.items %}
+									{% if key == f_p %}
+										{% for key2, item in dict.items %}
+											{% if key2 == s_p %}
+												<p>{{ item }}</p>
+											{% endif %}
+										{% endfor %}
+									{% endif %}
+								{% endfor %}
+							{% endif %}
+						</td>
+					{% endfor %}
+				</tr>
+			{% endfor %}
+		</table>
+	</div>
+	<div class="col-md-2"></div>
+</div>
+
+
+<script>
+	$(".delete_place").click(function(){
+		place_id = $("select.place_change").val();
+		if (parseInt(place_id) == -1)
+			return;
+		else
+			$.ajax({
+				url: "{% url 'delete_place' %}",
+				async: false,
+				data: {
+					place_id: place_id,
+				},
+			});
+			$(".place option").each(function() {
+				if ($(this).val() == place_id)
+					$(this).remove();
+			});
+});
+</script>
+{% endblock %}
+

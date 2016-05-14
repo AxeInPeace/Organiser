@@ -12,11 +12,11 @@
 				<label class="control-label col-sm-{{ size_per_label }}">Крайний срок</label>
 			</div>
 			{% include 'fields/date_time_field.html' with size_per_label='3' size_per_field='9' field_name_date='deadline_date' field_name_time='deadline_time' %}
-			{% include 'fields/select_field.html' with size_per_label='3' field_label='Место' size_per_field='9' field_name='place' set=places help_text='Выберите из списка место в котором необходимо выполнить задачу' %}
+			{% include 'fields/select_field.html' with size_per_label='3' field_label='Место' size_per_field='9' field_name='place' set=places help_text='Выберите из списка место в котором необходимо выполнить задачу' class='add_place' %}
 			<div class="form-group">
 				<div class="col-sm-3"></div>
 				<div class="col-sm-9">
-					<a href="#place" aria-controls="place" role="tab" data-toggle="tab"><button type="button" class="btn">Новое место</button></a>
+					<button type="button" class="btn" data-toggle="modal" data-target="#add_place">Новое место</button>
 				</div>
 			</div>
 

@@ -1,0 +1,82 @@
+{% extends "maintemp.html" %}
+{% load staticfiles %}
+{% block includes %}
+<script type="text/javascript" src="{% static 'moment.js' %}"></script>
+<script type="text/javascript" src="{% static 'combodate.js' %}"></script>
+{% endblock %}
+
+{% block title %}События{% endblock %}
+
+{% block content %}
+<div class="row">
+	<p>{{ message }}</p>
+
+	<div class="col-md-2">
+
+	</div>
+
+	<div class="col-md-8">
+
+		<form id="change_event" method="post" action="{% url 'change_events' %}">
+			<div class="form-horizontal">
+				<div class="form-group">
+				{% include 'fields/select_field.html' with set=events field_label='Событие' default_option='Выберите событие' class="choose_event" field_name='event_id' %}
+
+						<button class="btn btn-default delete_event" type="button">Удалить событие</button>
+				</div>
+			</div>
+
+
+			<div class="form-horizontal">
+				{% include 'fields/input_field.html' with size_per_label='3' size_per_field='9' field_label='Имя' field_type='text' field_name='name'%}
+				<div class="form-group">
+					<div class="col-sm-3"></div>
+					<label class="control-label col-sm-{{ size_per_label }}">Начало события</label>
+				</div>
+				{% include 'fields/date_time_field.html' with size_per_label='3' size_per_field='9' field_name_date='start_date' field_name_time='start_time' %}
+				<div class="form-group">
+					<div class="col-sm-3"></div>
+					<label class="control-label col-sm-{{ size_per_label }}">Конец события</label>
+				</div>
+				{% include 'fields/date_time_field.html' with size_per_label='3' size_per_field='9' field_name_date='end_date' field_name_time='end_time' %}
+				{% include 'fields/select_field.html' with size_per_label='3' field_label='Расписание' size_per_field='9' field_name='schedule' set=schedules help_text='Выберите из списка к какому расписанию относится событие' %}
+				{% include 'fields/select_field.html' with size_per_label='3' field_label='Место' size_per_field='9' field_name='place' set=places help_text='Выберите из списка место в котором происходит событие' %}
+
+				{% include 'fields/repeat_field.html' %}
+
+				<div class="form-group">
+					<div class="col-sm-3"></div>
+					<div class="col-sm-3">
+						<button class="btn btn-default" type="submit">Изменить событие</button>
+					</div>
+				</div>
+			</div>
+			{% csrf_token %}
+		</form>
+	</div>
+
+	<div class="col-md-2">
+
+	</div>
+</div>
+
+
+<script>
+	$(".delete_event").click(function(){
+		event_id = $("select").first().val();
+		if (parseInt(event_id) == -1)
+			return;
+		else
+			$.ajax({
+				url: "{% url 'delete_event' %}",
+				async: false,
+				data: {
+					event_id: event_id,
+				},
+			});
+			cur_option = $("select.choose_event");
+			$("select.choose_event :selected").remove();
+});
+</script>
+{% endblock %}
+

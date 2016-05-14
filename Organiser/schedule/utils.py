@@ -2,7 +2,7 @@ import datetime
 
 
 def get_datetime(request, date_name, time_name):
-    return datetime.datetime.strptime(request.POST.get(date_name) + request.POST.get(time_name), '%d-%m-%Y%H:%M')
+    return datetime.datetime.strptime(request.POST.get(date_name) + request.POST.get(time_name), '%Y-%m-%d%H:%M')
 
 
 def get_duration(time):
@@ -21,15 +21,15 @@ def correct_time(time):
 
 
 def get_repetition_info(request):
-    amount = request.POST.get('amount')
-    if request.POST.get('repeat') == 'none':
+    amount = int(request.POST.get('amount'))
+    if amount < 1:
+        amount = 1
+    repeat = int(request.POST.get('repeat'))
+    if repeat is None:
         period = datetime.timedelta(0)
-    elif request.POST.get('repeat') == 'week':
-        period = datetime.timedelta(7)
     else:
-        period = datetime.timedelta(0)
+        period = datetime.timedelta(repeat)
 
-    #TODO: prevent wrong input
     days = []
     for i in range(7):
         if request.POST.get('weekday'+str(i)) == str(i):
@@ -43,15 +43,14 @@ def get_repetition_info(request):
     return rep
 
 
-def get_start_day(start_time, weekday):
-    start_day = start_time.date()
-    start_weekday = start_time.weekday()
+def get_event_day(start_day, weekday):
+    start_weekday = start_day.weekday()
     if start_weekday <= weekday:
         new_start_day = start_day + datetime.timedelta(weekday - start_weekday)
     else:
         new_start_day = start_day + datetime.timedelta(weekday - start_weekday + 7)
 
-    return new_start_day
+    return new_start_day.date()
 
 
 def event_dict_create(name, start_time, end_time, color="white"):
@@ -76,7 +75,7 @@ def calc_height(event, before_event):
     event['space_before'] = 100 * time_before / datetime.timedelta(days=1)
 
 
-def generate_events(repetitions, cur_date=(datetime.datetime.now().date() + datetime.timedelta(0))):
+def generate_events(repetitions, cur_date=datetime.datetime.now().date()):
     cur_weekday = cur_date.weekday()
     dates = []
     for i in range(7):
@@ -85,38 +84,28 @@ def generate_events(repetitions, cur_date=(datetime.datetime.now().date() + date
     events_in_cur_week = []
 
     for rep in repetitions:
-        for i in range(rep.amount):
-            event_date = rep.start_day + rep.repetition * i
-            if event_date in dates:
-                events_in_cur_week.append({'rep': rep, 'date': event_date})
-            elif dates[0] - event_date == datetime.timedelta(1) \
-                    and rep.event.start_time.date() != rep.event.end_time.date():
-                events_in_cur_week.append({'rep': rep, 'date': event_date})
+        if rep.start_time.date() in dates or rep.end_time.date() in dates:
+            events_in_cur_week.append(rep)
 
-    event_per_weekday = []
-    for i in range(7):
-        event_per_weekday.append([])
+    event_per_weekday = [[] for k in range(7)]
 
     for event in events_in_cur_week:
-        if event['rep'].event.start_time.date() == event['rep'].event.end_time.date():
-            event_per_weekday[event['rep'].start_day.weekday()].append(
-                    event_dict_create(event['rep'].event.name,
-                                      event['rep'].event.start_time,
-                                      event['rep'].event.end_time,
-                                      'green')
+        if event.start_time.date() == event.end_time.date():
+            event_per_weekday[event.start_time.weekday()].append(
+                event_dict_create(event.event.name, event.start_time, event.end_time, 'green')
             )
         else:
-            start_day_end = datetime.datetime.combine(event['date'], datetime.time(23, 59, 59))
-            end_day_start = datetime.datetime.combine(event['date'] + datetime.timedelta(1), datetime.time(0, 0, 0))
+            end_of_start_day = datetime.datetime.combine(event.start_time.date(), datetime.time(23, 59, 59))
+            start_of_end_day = datetime.datetime.combine(event.end_time.date(), datetime.time(0, 0, 0))
 
-            if start_day_end.date() in dates:
-                event_per_weekday[start_day_end.weekday()].append(
-                        event_dict_create(event['rep'].event.name, event['rep'].event.start_time, start_day_end, 'green')
+            if end_of_start_day.date() in dates:
+                event_per_weekday[end_of_start_day.weekday()].append(
+                    event_dict_create(event.event.name, event.start_time, end_of_start_day, 'green')
                 )
 
-            if end_day_start.date() in dates:
-                event_per_weekday[end_day_start.weekday()].append(
-                        event_dict_create(event['rep'].event.name, end_day_start, event['rep'].event.end_time, 'green')
+            if start_of_end_day.date() in dates:
+                event_per_weekday[start_of_end_day.weekday()].append(
+                    event_dict_create(event.event.name, start_of_end_day, event.end_time, 'green')
                 )
 
     for i in range(7):
@@ -148,12 +137,13 @@ def generate_tasks(tasks, cur_date=(datetime.datetime.now().date() + datetime.ti
     tasks_in_cur_week = []
 
     for task in tasks:
-        task_date = task.start_time.date()
-        if task_date in dates:
-            tasks_in_cur_week.append(task)
-        elif dates[0] - task_date == datetime.timedelta(1) \
-                and task.start_time.date() != task.end_time.date():
-            tasks_in_cur_week.append(task)
+        if not(task.start_time is None or task.end_time is None):
+            task_date = task.start_time.date()
+            if task_date in dates:
+                tasks_in_cur_week.append(task)
+            elif dates[0] - task_date == datetime.timedelta(1) \
+                    and task.start_time.date() != task.end_time.date():
+                tasks_in_cur_week.append(task)
 
     task_per_weekday = []
     for i in range(7):

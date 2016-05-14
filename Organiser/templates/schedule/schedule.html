@@ -11,37 +11,21 @@
 <div class="row">
 	<div class="col-md-8">
 		<p>{{ message }}</p>
-		<div class="jumbotron">
-			<table border="3">
-				<tr>
-					<th>Понедельник</th>
-					<th>Вторник</th>
-					<th>Среда</th>
-					<th>Четверг</th>
-					<th>Пятница</th>
-					<th>Суббота</th>
-					<th>Воскресение</th>
-				</tr>
-
-				<tr style="position: relative;height: 400px; width:700px; overflow: hidden;">
-					{% for event in events %}
-					<td style="width: 100px; height: 400px">
-						{% for item in event %}
-						<div style="height: {{ item.space_before }}%;overflow: hidden; background-color: white;position: static;"></div>
-						<div style="position:static;height: {{ item.height }}%;overflow: hidden; background-color: {{ item.color }}">
-
-							<p data-toggle="tooltip" data-placement="top" title='Время начала: {{ item.start_time| date:"H i" }}<hr> Время конца:{{ item.end_time| date:"H i" }}'>
-								{{ item.name }}
-							</p>
-						</div>
-						{% endfor %}
-					</td>
-					{% endfor %}
-				</tr>
-
-			</table>
-
-			<a href="{% url 'generate_schedule' %}"><button class="btn">Составить расписание!</button></a>
+		<div class="jumbotron" style="float:left;">
+			<data class="hide schedule_table_date" value="{{ nowdate }}"></data>
+			<div style="width:5%; float:left;">
+				<button class="btn btn-primary carousel carousel-left" style="height:460px;">
+					<span class="glyphicon glyphicon-menu-left" aria-hidden="true"></span>
+				</button>
+			</div>
+			<div id="schedule_table" style="width:90%; float:left;">
+				{% include 'schedule/schedule_table.html' %}
+			</div>
+			<div style="width:5%; float:left;">
+				<button class="btn btn-primary carousel carousel-right" style="height:460px;">
+					<span class="glyphicon glyphicon-menu-right" aria-hidden="true"></span>
+				</button>
+			</div>
 		</div>
 		<table class="table">
 			<tr>
@@ -50,14 +34,23 @@
 				<th>Дедлайн</th>
 				<th>Начальное время</th>
 				<th>Конечное время</th>
+				<th>Выполнено?</th>
 			</tr>
 			{% for task in tasks %}
-			<tr>
+			<tr {% if task.end_time > task.deadline %} class="danger" {% endif %}>
 				<td>{{ task.name }}</td>
 				<td>{{ task.longitude }}</td>
-				<td>{{ task.deadline | date:"m, d - H:i" }}</td>
-				<td>{{ task.start_time | date:"m, d - H:i" }}</td>
-				<td>{{ task.end_time | date:"m, d - H:i" }}</td>
+				<td>{{ task.deadline | date:"d/m - H:i" }}</td>
+				<td>{{ task.start_time | date:"d/m - H:i" }}</td>
+				<td>{{ task.end_time | date:"d/m - H:i" }}</td>
+				<td>
+					<data class="task_id" value="{{ task.id }}">
+						<button class="btn task_complete">
+							Выполнено!
+						</button>
+					</data>
+				</td>
+
 			</tr>
 			{% endfor %}
 		</table>
@@ -76,10 +69,6 @@
 				<li role="presentation">
 					<a href="#task" aria-controls="task" role="tab" data-toggle="tab">Задачи</a>
 				</li>
-
-				<li role="presentation">
-					<a href="#place" aria-controls="place" role="tab" data-toggle="tab">Место</a>
-				</li>
 			</ul>
 
 			<div class="tab-content">
@@ -92,18 +81,57 @@
 				<div role="tabpanel" class="tab-pane" id="event">
 					{% include 'schedule/event_form.html' %}
 				</div>
-				<div role="tabpanel" class="tab-pane" id="place">
-					{% include 'schedule/place_form.html' %}
-				</div>
 			</div>
 		</div>
 	</div>
 </div>
+{% include "windows/place_window.html" %}
 
 <script>
 $(function () {
   $('[data-toggle="tooltip"]').tooltip({html: true})
-})
+});
+
+$(".task_complete").click(function(){
+	task_id = $(this).parents("data.task_id").val();
+	$.ajax({
+		url: "{% url 'task_complete' %}",
+		async: false,
+		data: {
+			task_id: task_id,
+		},
+		});
+});
+
+$(".carousel").click(function(){
+    var cur_date = new Date($(".schedule_table_date").val());
+    var amount = 0
+    if ($(this).hasClass("carousel-left"))
+        amount = -7;
+    else if ($(this).hasClass("carousel-right"))
+        amount = 7;
+    cur_date.setDate(cur_date.getDate() + amount);
+
+
+    $.ajax({
+		url: "{% url 'change_schedule_table' %}",
+		async: false,
+		data: {
+			year: cur_date.getFullYear(),
+			month: cur_date.getMonth(),
+			day: cur_date.getDate(),
+		},
+		success: function(newData){
+        $('#schedule_table').html(newData);
+    }
+		});
+	$(".schedule_table_date").val(cur_date);
+
+	$(function () {
+	  $('[data-toggle="tooltip"]').tooltip({html: true})
+	});
+});
+
 </script>
 {% endblock %}
 

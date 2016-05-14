@@ -1,0 +1,8 @@
+{% extends "windows/modal_window.html" %}
+{% block modal_id %}add_place{% endblock %}
+{% block modal_title %}
+	Добавить место
+{% endblock %}
+{% block modal_body %}
+	{% include "schedule/place_form.html" %}
+{% endblock %}

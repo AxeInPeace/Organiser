@@ -1,14 +1,32 @@
 <div class="row">
-	<form id="add_place" method="post" action="{% url 'add_place' %}">
-		<div class="form-horizontal">
-			{% include 'fields/input_field.html' with size_per_label='3' size_per_field='9' field_label='Имя' field_type='text' field_name='name' %}
-			<div class="form-group">
-				<div class="col-sm-3"></div>
-				<div class="col-sm-3">
-					<button class="btn btn-default" type="submit">Добавить место</button>
-				</div>
+	<div class="form-horizontal" id="add_place">
+		{% include 'fields/input_field.html' with size_per_label='3' size_per_field='6' field_label='Имя' field_type='text' field_name='name' %}
+		<div class="form-group">
+			<div class="col-sm-3"></div>
+			<div class="col-sm-3">
+				<button class="btn btn-default submit_place" data-dismiss="modal" type="button">Добавить место</button>
 			</div>
 		</div>
-		{% csrf_token %}
-	</form>
+	</div>
+	{% csrf_token %}
+
 </div>
+
+<script>
+	$(".submit_place").click(function(){
+		var place_name = $("#add_place input[name='name']").val();
+		$.get(
+			"{% url 'add_place' %}",
+			{
+				place_name: place_name,
+			},
+			function(data){
+				place_id = data.id;
+				$("select.add_place").each(function() {
+          $(this).append($("<option></option>").attr("value", place_id).text(place_name));
+				});
+			}
+		);
+
+	});
+</script>
