@@ -1,0 +1,47 @@
+{% extends "maintemp.html" %}
+{% load staticfiles %}
+{% block includes %}
+{% endblock %}
+
+{% block title %}Друзья{% endblock %}
+
+{% block content %}
+<div class="row">
+	<div class="col-md-2"></div>
+	<div class="col-md-7">
+		<form method="post" action="{% url 'search_friends' %}">
+			<div class="form-horizontal">
+				<div class="form-group">
+					<label class="control-label col-sm-2">Поиск</label>
+					<div class="col-sm-7">
+						<input type="text" class="form-control" name="friend_search">
+					</div>
+					<button class="btn btn-primary" type="submit"><span class="glyphicon glyphicon-search"></span></button>
+				</div>
+			</div>
+			{% csrf_token %}
+		</form>
+	</div>
+	<div class="col-md-3"></div>
+</div>
+<hr>
+<div class="row">
+	<div class="col-md-1"></div>
+	<div class="col-md-11">
+		{% for man in people %}
+			<div class="col-md-1">
+				<a href="/friends/send{{ man.id }}"><button class="btn"><span class="glyphicon glyphicon-plus"></span></button></a>
+			</div>
+			<div class="col-md-11">
+				<p><a href="/friends/{{ man.id }}"><h4>{{ man.name }}</h4></a></p>
+			</div>
+		{% empty %}
+			<div>
+				<p>По вашему запросу никто не найден :(</p>
+			</div>
+		{% endfor %}
+	</div>
+	<div class="col-md-1"></div>
+</div>
+{% endblock %}
+

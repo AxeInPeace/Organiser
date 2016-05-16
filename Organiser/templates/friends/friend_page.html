@@ -1,0 +1,116 @@
+{% extends "maintemp.html" %}
+{% load staticfiles %}
+{% block includes %}
+{% endblock %}
+
+{% block title %}{{ friend.name }}{% endblock %}
+
+{% block content %}
+<data value="{{ friend.id }}" id="friend_id"></data>
+<div class="row">
+	<div class="col-md-8">
+		<p>{{ message }}</p>
+		<div class="jumbotron" style="float:left;">
+			<data class="hide schedule_table_date" value="{{ nowdate }}"></data>
+			<div style="width:5%; float:left;">
+				<button class="btn btn-primary carousel carousel-left" style="height:460px;">
+					<span class="glyphicon glyphicon-menu-left" aria-hidden="true"></span>
+				</button>
+			</div>
+			<div id="schedule_table" style="width:90%; float:left;">
+				{% include 'schedule/schedule_table.html' with no_generate=True %}
+			</div>
+			<div style="width:5%; float:left;">
+				<button class="btn btn-primary carousel carousel-right" style="height:460px;">
+					<span class="glyphicon glyphicon-menu-right" aria-hidden="true"></span>
+				</button>
+			</div>
+		</div>
+	</div>
+	<div class="col-md-4">
+		<div class="bs-example bs-example-tabs" data-example-id="togglable-tabs">
+			<ul class="nav nav-tabs" role="tablist">
+				<li role="presentation" class="active">
+					<a href="#profile" aria-controls="profile" role="tab" data-toggle="tab">Профиль</a>
+				</li>
+
+				<li role="presentation">
+					<a href="#schedule_import" aria-controls="schedule_import" role="tab" data-toggle="tab">Расписание для импорта</a>
+				</li>
+
+				<li role="presentation">
+					<a href="#schedule_export" aria-controls="schedule_export" role="tab" data-toggle="tab">Расписание для экспорта</a>
+				</li>
+			</ul>
+
+			<div class="tab-content">
+				<div role="tabpanel" class="tab-pane active" id="profile">
+					<div class="row">
+						<div class="col-md-3">
+							<p>ID</p>
+						</div>
+						<div class="col-md-7">
+							<p>{{ friend.id }}</p>
+						</div>
+						<div class="col-md-2">
+							<a href="/friends/send{{ friend.id }}">
+								<button class="btn"><span class="glyphicon glyphicon-plus"></span></button>
+							</a>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-md-3">
+							<p>Имя</p>
+						</div>
+						<div class="col-md-9">
+							<p>{{ friend.name }}</p>
+						</div>
+					</div>
+				</div>
+				<div role="tabpanel" class="tab-pane" id="schedule_import">
+				</div>
+				<div role="tabpanel" class="tab-pane" id="schedule_export">
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script>
+$(function () {
+  $('[data-toggle="tooltip"]').tooltip({html: true})
+});
+
+$(".carousel").click(function(){
+    var cur_date = new Date($(".schedule_table_date").val());
+    var amount = 0
+    if ($(this).hasClass("carousel-left"))
+        amount = -7;
+    else if ($(this).hasClass("carousel-right"))
+        amount = 7;
+    cur_date.setDate(cur_date.getDate() + amount);
+		var friend_id = parseInt($("#friend_id").val());
+
+    $.ajax({
+		url: "{% url 'change_schedule_table' %}",
+		async: false,
+		data: {
+			year: cur_date.getFullYear(),
+			month: cur_date.getMonth(),
+			day: cur_date.getDate(),
+			user_id: friend_id,
+		},
+		success: function(newData){
+        $('#schedule_table').html(newData);
+    }
+		});
+	$(".schedule_table_date").val(cur_date);
+
+	$(function () {
+	  $('[data-toggle="tooltip"]').tooltip({html: true})
+	});
+});
+
+</script>
+{% endblock %}
+

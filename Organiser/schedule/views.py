@@ -5,14 +5,13 @@ from .genetic import genetic
 from django.http import HttpResponseRedirect, JsonResponse
 
 
-
-def get_context(request, date=datetime.datetime.now().date()):
-    schedules = Schedule.objects.filter(user=request.user)
-    places = Place.objects.filter(user=request.user)
+def get_context(request, user, date=datetime.datetime.now().date()):
+    schedules = Schedule.objects.filter(user=user)
+    places = Place.objects.filter(user=user)
     events = Event.objects.filter(schedule__in=schedules)
     repetitions = EventRepetition.objects.filter(event__in=events)
     full_events = generate_events(repetitions, date)
-    tasks = Task.objects.filter(user=request.user, complete=False)
+    tasks = Task.objects.filter(user=user, complete=False)
     full_tasks = generate_tasks(tasks, date)
 
     all_events = []
@@ -39,7 +38,7 @@ def get_context(request, date=datetime.datetime.now().date()):
 
 def main(request):
     if request.user.is_authenticated():
-        context = get_context(request)
+        context = get_context(request, request.user)
         return render(request, 'schedule/schedule.html', context)
     else:
         return render(request, 'schedule/schedule.html')
@@ -49,14 +48,19 @@ def table_schedule(request):
     to_date = datetime.date(int(request.GET.get('year')),
                             int(request.GET.get('month')) + 1,
                             int(request.GET.get('day')))
-    context = get_context(request, to_date)
+    if request.GET.get('user_id') is None:
+        context = get_context(request, request.user, to_date)
+    else:
+        cur_user = User.objects.get(id=request.GET.get('user_id'))
+        context = get_context(request, cur_user, to_date)
+        context['no_generate'] = True
     return render_to_response('schedule/schedule_table.html',
                               context,
                               context_instance=RequestContext(request))
 
 
 def add_task(request):
-    context = get_context(request)
+    context = get_context(request, request.user)
     context['message'] = "Задача успешно создана"
 
     name = request.POST.get('name')
@@ -75,7 +79,7 @@ def add_task(request):
 
 
 def add_event(request):
-    context = get_context(request)
+    context = get_context(request, request.user)
     context['message'] = "Событие успешно создано"
     name = request.POST.get('name')
     start_time = get_datetime(request, 'start_date', 'start_time')
@@ -119,7 +123,7 @@ def add_event(request):
 
 
 def add_schedule(request):
-    context = get_context(request)
+    context = get_context(request, request.user)
     context['message'] = "Расписание успешно создано"
     if request.method == 'POST':
         name = request.POST.get('name')
@@ -145,7 +149,7 @@ def generate_shedule(request):
 
     tasks = list(Task.objects.filter(user=request.user, complete=False))
     genetic(list(repetitions), tasks)
-    context = get_context(request)
+    context = get_context(request, request.user)
     return render(request, 'schedule/schedule.html', context)
 
 
@@ -158,7 +162,7 @@ def task_complete(request):
 
 def change_events(request):
     if request.method == 'GET':
-        context = get_context(request)
+        context = get_context(request, request.user)
         schedules = Schedule.objects.filter(user=request.user)
         events = Event.objects.filter(schedule__in=schedules)
         context["events"] = events
@@ -188,7 +192,7 @@ def change_tasks(request):
         task_id = int(request.POST.get('task_id'))
         Task.objects.get(id=task_id).delete()
         add_task(request)
-    context = get_context(request)
+    context = get_context(request, request.user)
     tasks = Task.objects.filter(user=request.user)
     context["tasks"] = tasks
     return render(request, 'schedule/tasks.html', context)
@@ -205,7 +209,7 @@ def change_places(request):
         Place.objects.get(id=place_id).delete()
         name = request.POST.get('place_name')
         Place.objects.create(name=name, user=request.user)
-    context = get_context(request)
+    context = get_context(request, request.user)
     places = Place.objects.filter(user=request.user)
     context["places"] = places
     distances = {}
@@ -231,7 +235,7 @@ def time_for_places(request):
     dist = get_duration(request.POST.get('time_between_places'))
     Distance.objects.update_or_create(place_f_id=fp, place_s_id=sp, defaults={'time':dist})
     Distance.objects.update_or_create(place_s_id=fp, place_f_id=sp, defaults={'time':dist})
-    context = get_context(request)
+    context = get_context(request, request.user)
     places = Place.objects.filter(user=request.user)
     context["places"] = places
     distances = {}

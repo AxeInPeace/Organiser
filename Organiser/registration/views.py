@@ -1,5 +1,6 @@
 from django.shortcuts import render, render_to_response
 from django.contrib.auth.models import User
+from ..friends.models import UserInfo
 
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.contrib.auth import authenticate, login, logout
@@ -48,6 +49,7 @@ def registration(request):
             try:
                 print(form["mail"], form["mail"], form["password"])
                 new_user = User.objects.create_user(form["mail"], form["mail"], form["password"])
+                UserInfo.objects.create(user=new_user, name=form["name"])
                 new_user.last_name = form["name"]
                 new_user.save()
             except:

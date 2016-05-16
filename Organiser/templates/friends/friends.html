@@ -1,0 +1,49 @@
+{% extends "maintemp.html" %}
+{% load staticfiles %}
+{% block includes %}
+{% endblock %}
+
+{% block title %}Друзья{% endblock %}
+
+{% block content %}
+<div class="row">
+	<div class="col-md-2"></div>
+	<div class="col-md-7">
+		<form method="post" action="{% url 'search_friends' %}">
+			<div class="form-horizontal">
+				<div class="form-group">
+					<label class="control-label col-sm-2">Поиск</label>
+					<div class="col-sm-7">
+						<input type="text" class="form-control" name="friend_search">
+					</div>
+					{% csrf_token %}
+					<button class="btn btn-primary" type="submit"><span class="glyphicon glyphicon-search"></span></button>
+				</div>
+			</div>
+		</form>
+	</div>
+	<div class="col-md-3"></div>
+</div>
+<hr>
+<div class="row">
+	<div class="col-md-1"></div>
+	<div class="col-md-9">
+		{% for friend in friends %}
+			<div>
+				<a href="/friends/{{ friend.id }}"><h4>{{ friend.name }}</h4></a>
+			</div>
+		{% endfor %}
+	</div>
+	<div class="col-md-2">
+		{% for request in requests %}
+			<div>
+				<p>{{ request.name }}</p>
+
+				<a href="/friends/accept{{ request.id }}"><button><span class="glyphicon glyphicon-ok"></span></button></a>
+				<a href="/friends/decline{{ request.id }}"><button><span class="glyphicon glyphicon-remove"></span></button></a>
+			</div>
+		{% endfor %}
+	</div>
+</div>
+{% endblock %}
+
