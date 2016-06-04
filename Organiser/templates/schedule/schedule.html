@@ -10,7 +10,7 @@
 {% block content %}
 <div class="row">
 	<div class="col-md-8">
-		<p>{{ message }}</p>
+		<p id="schedule_message">{{ message }}</p>
 		<div class="jumbotron" style="float:left;">
 			<data class="hide schedule_table_date" value="{{ nowdate }}"></data>
 			<div style="width:5%; float:left;">
@@ -27,6 +27,10 @@
 				</button>
 			</div>
 		</div>
+		<hr>
+    <label>
+      <input type="checkbox" class="hide_ended"> Скрыть завершённые задачи
+    </label>
 		<table class="table">
 			<tr>
 				<th>Имя</th>
@@ -36,8 +40,17 @@
 				<th>Конечное время</th>
 				<th>Выполнено?</th>
 			</tr>
-			{% for task in tasks %}
-			<tr {% if task.end_time > task.deadline %} class="danger" {% endif %}>
+			{% for task in all_tasks %}
+			<tr
+					{% if task.complete %}
+						class="success task"
+					{% else %}
+						{% if task.end_time > task.deadline %}
+							class="danger task"
+						{% else %}
+							class="task"
+						{% endif %}
+					{% endif %}>
 				<td>{{ task.name }}</td>
 				<td>{{ task.longitude }}</td>
 				<td>{{ task.deadline | date:"d/m - H:i" }}</td>
@@ -45,8 +58,12 @@
 				<td>{{ task.end_time | date:"d/m - H:i" }}</td>
 				<td>
 					<data class="task_id" value="{{ task.id }}">
-						<button class="btn task_complete">
-							Выполнено!
+						<button class="btn change_complete">
+							{% if task.complete %}
+								Не выполнено!
+							{% else %}
+								Выполнено!
+							{% endif %}
 						</button>
 					</data>
 				</td>
@@ -56,6 +73,7 @@
 		</table>
 	</div>
 	<div class="col-md-4">
+		<h4>Добавление элементов расписания</h4>
 		<div class="bs-example bs-example-tabs" data-example-id="togglable-tabs">
 			<ul class="nav nav-tabs" role="tablist">
 				<li role="presentation" class="active">
@@ -73,47 +91,144 @@
 
 			<div class="tab-content">
 				<div role="tabpanel" class="tab-pane active" id="schedule">
-					{% include 'schedule/schedule_form.html' %}
+					<div class="panel-group" id="schedule_panel" role="tablist" aria-multiselectable="true">
+					  <div class="panel panel-default">
+					    <div class="panel-heading" role="tab" id="schedule_panel_adding">
+					      <h4 class="panel-title">
+					        <a role="button" data-toggle="collapse" data-parent="#scedule_panel" href="#collapse_schedule_panel_1" aria-expanded="true" aria-controls="collapse_schedule_panel_1">
+					          Добавление расписания
+					        </a>
+					      </h4>
+					    </div>
+					    <div id="collapse_schedule_panel_1" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="schedule_panel_adding">
+					      <div class="panel-body">
+					        {% include 'schedule/schedule_form.html' %}
+					      </div>
+					    </div>
+					  </div>
+					  <div class="panel panel-default">
+					    <div class="panel-heading" role="tab" id="schedule_panel_edit">
+					      <h4 class="panel-title">
+					        <a class="collapsed" role="button" data-toggle="collapse" data-parent="#schedule_panel" href="#collapse_schedule_panel_2" aria-expanded="false" aria-controls="collapse_schedule_panel_2">
+					          Реадктирование и удаление расписаний
+					        </a>
+					      </h4>
+					    </div>
+					    <div id="collapse_schedule_panel_2" class="panel-collapse collapse" role="tabpanel" aria-labelledby="schedule_panel_edit">
+					      <div class="panel-body">
+					        {% include 'schedule/schedules.html' %}
+					      </div>
+					    </div>
+					  </div>
+					</div>
 				</div>
 				<div role="tabpanel" class="tab-pane" id="task">
-					{% include 'schedule/task_form.html' %}
+					<div class="panel-group" id="task_panel" role="tablist" aria-multiselectable="true">
+					  <div class="panel panel-default">
+					    <div class="panel-heading" role="tab" id="task_panel_adding">
+					      <h4 class="panel-title">
+					        <a role="button" data-toggle="collapse" data-parent="#task_panel" href="#collapse_task_panel_1" aria-expanded="true" aria-controls="collapse_task_panel_1">
+					          Добавление задачи
+					        </a>
+					      </h4>
+					    </div>
+					    <div id="collapse_task_panel_1" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="task_panel_adding">
+					      <div class="panel-body">
+					        {% include 'schedule/task_form.html' %}
+					      </div>
+					    </div>
+					  </div>
+					  <div class="panel panel-default">
+					    <div class="panel-heading" role="tab" id="task_panel_edit">
+					      <h4 class="panel-title">
+					        <a class="collapsed" role="button" data-toggle="collapse" data-parent="#task_panel" href="#collapse_task_panel_2" aria-expanded="false" aria-controls="collapse_task_panel_2">
+					          Редактирование и удаление задачи
+					        </a>
+					      </h4>
+					    </div>
+					    <div id="collapse_task_panel_2" class="panel-collapse collapse" role="tabpanel" aria-labelledby="task_panel_edit">
+					      <div class="panel-body">
+									{% include 'schedule/tasks.html' %}
+					      </div>
+					    </div>
+					  </div>
+					</div>
 				</div>
 				<div role="tabpanel" class="tab-pane" id="event">
-					{% include 'schedule/event_form.html' %}
+					<div class="panel-group" id="event_panel" role="tablist" aria-multiselectable="true">
+					  <div class="panel panel-default">
+					    <div class="panel-heading" role="tab" id="event_panel_adding">
+					      <h4 class="panel-title">
+					        <a role="button" data-toggle="collapse" data-parent="#event_panel" href="#collapse_event_panel_1" aria-expanded="true" aria-controls="collapse_event_panel_1">
+					          Добавление события
+					        </a>
+					      </h4>
+					    </div>
+					    <div id="collapse_event_panel_1" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="event_panel_adding">
+					      <div class="panel-body">
+					        {% include 'schedule/event_form.html' %}
+					      </div>
+					    </div>
+					  </div>
+					  <div class="panel panel-default">
+					    <div class="panel-heading" role="tab" id="event_panel_edit">
+					      <h4 class="panel-title">
+					        <a class="collapsed" role="button" data-toggle="collapse" data-parent="#event_panel" href="#collapse_event_panel_2" aria-expanded="false" aria-controls="collapse_event_panel_2">
+					          Редактирование и удаление события
+					        </a>
+					      </h4>
+					    </div>
+					    <div id="collapse_event_panel_2" class="panel-collapse collapse" role="tabpanel" aria-labelledby="event_panel_edit">
+					      <div class="panel-body">
+									{% include 'schedule/events.html' %}
+					      </div>
+					    </div>
+					  </div>
+					</div>
 				</div>
 			</div>
 		</div>
 	</div>
 </div>
 {% include "windows/place_window.html" %}
+{% include "windows/unsuccess_schedule.html" %}
 
 <script>
-$(function () {
+var tooltip_activate = function() {
   $('[data-toggle="tooltip"]').tooltip({html: true})
-});
+};
 
-$(".task_complete").click(function(){
-	task_id = $(this).parents("data.task_id").val();
+$(tooltip_activate());
+
+var change_task_status = function(btn, url){
+	task_id = btn.parents("data.task_id").val();
 	$.ajax({
-		url: "{% url 'task_complete' %}",
+		url: url,
 		async: false,
 		data: {
 			task_id: task_id,
 		},
-		});
+		success: function(data) {
+			if (data.complete) {
+				btn.parents("tr.task").addClass("success");
+				btn.removeClass("task_complete").addClass("task_not_complete");
+				btn.html("Не выполнено!")
+			}
+			else {
+				btn.parents("tr.task").removeClass("success");
+				btn.removeClass("task_not_complete").addClass("task_complete");
+				btn.html("Выполнено!")
+			};
+		}
+	});
+};
+
+$(".change_complete").click(function(){
+	change_task_status($(this), "{% url 'change_task_status' %}");
 });
 
-$(".carousel").click(function(){
-    var cur_date = new Date($(".schedule_table_date").val());
-    var amount = 0
-    if ($(this).hasClass("carousel-left"))
-        amount = -7;
-    else if ($(this).hasClass("carousel-right"))
-        amount = 7;
-    cur_date.setDate(cur_date.getDate() + amount);
-
-
-    $.ajax({
+var update_schedule_table = function(cur_date){
+	$.ajax({
 		url: "{% url 'change_schedule_table' %}",
 		async: false,
 		data: {
@@ -124,12 +239,31 @@ $(".carousel").click(function(){
 		success: function(newData){
         $('#schedule_table').html(newData);
     }
-		});
+	});
+};
+
+$(".carousel").click(function(){
+  var cur_date = new Date($(".schedule_table_date").val());
+  var amount = 0
+  if ($(this).hasClass("carousel-left"))
+    amount = -7;
+  else if ($(this).hasClass("carousel-right"))
+    amount = 7;
+  cur_date.setDate(cur_date.getDate() + amount);
+	update_schedule_table(cur_date);
+
 	$(".schedule_table_date").val(cur_date);
 
-	$(function () {
-	  $('[data-toggle="tooltip"]').tooltip({html: true})
-	});
+	$(tooltip_activate());
+});
+
+$(".hide_ended").on("change", function(){
+	if ($(this).prop('checked')) {
+		$("tr.success.task").each(function(){ $(this).addClass("hide"); });
+	}
+	else {
+		$("tr.success.task").each(function(){ $(this).removeClass("hide"); });
+	}
 });
 
 </script>

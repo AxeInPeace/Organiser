@@ -1,13 +1,13 @@
 <div class="form-group">
 	<label class="control-label col-sm-{{ size_per_label }}">Время</label>
 	<div class="col-sm-{{ size_per_field }}">
-		<input id="{{ field_name_time }}" data-format="HH:mm" data-template="HH : mm" name="{{ field_name_time }}" type="text" value="00:00">
+		<input class="{{ field_name_time }}" data-format="HH:mm" data-template="HH : mm" name="{{ field_name_time }}" type="text" value="00:00">
 	</div>
 </div>
 
 <script>
 	$(function(){
-    $('#{{ field_name_time }}').combodate({
+    $('.{{ field_name_time }}').combodate({
         minuteStep: 1
     });
 	});

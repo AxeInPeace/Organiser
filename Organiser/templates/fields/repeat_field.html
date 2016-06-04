@@ -5,40 +5,34 @@
 	<div class="col-sm-9">
 		<div class="radio">
 		  <label>
-		    <input type="radio" name="repeat" value="0" checked>
-		    не повторять
-		  </label>
-		</div>
-		<div class="radio">
-		  <label>
 		    <input type="radio" name="repeat" value="7">
-		    день недели:
+		    день недели
 		  </label>
 		</div>
 
 		<div class="radio">
 		  <label>
 		    <input type="radio" name="repeat" value="14">
-		    две недели:
+		    две недели
 		  </label>
 		</div>
 		<div class="radio">
 		  <label>
 		    <input type="radio" name="repeat" value="28">
-		    месяц:
+		    4 недели
 		  </label>
 		</div>
 
 		<div class="radio">
 		  <label>
 		    <input type="radio" name="repeat" value="84">
-		    три месяца:
+		    12 недель(три месяца)
 		  </label>
 		</div>
 		<div class="radio">
 		  <label>
 		    <input type="radio" name="repeat" value="365">
-		    год:
+		    год
 		  </label>
 		</div>
 	</div>
@@ -75,4 +69,4 @@
   </label>
 
 </div>
-{% include 'fields/input_field.html' with size_per_label='3' size_per_field='9' field_label='Колиество повторений' field_type='number' field_name='amount' %}
+{% include 'fields/input_field.html' with size_per_label='3' size_per_field='9' field_label='Колиество повторений' field_type='number' field_name='amount' default_val='1' %}

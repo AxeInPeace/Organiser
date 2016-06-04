@@ -35,12 +35,14 @@
 				</li>
 
 				<li role="presentation">
-					<a href="#schedule_import" aria-controls="schedule_import" role="tab" data-toggle="tab">Расписание для импорта</a>
+					<a href="#schedule_import" aria-controls="schedule_import" role="tab" data-toggle="tab">
+						Расписание для импорта
+					</a>
 				</li>
 
-				<li role="presentation">
+				<!--<li role="presentation">
 					<a href="#schedule_export" aria-controls="schedule_export" role="tab" data-toggle="tab">Расписание для экспорта</a>
-				</li>
+				</li>-->
 			</ul>
 
 			<div class="tab-content">
@@ -49,14 +51,10 @@
 						<div class="col-md-3">
 							<p>ID</p>
 						</div>
-						<div class="col-md-7">
+						<div class="col-md-9">
 							<p>{{ friend.id }}</p>
 						</div>
-						<div class="col-md-2">
-							<a href="/friends/send{{ friend.id }}">
-								<button class="btn"><span class="glyphicon glyphicon-plus"></span></button>
-							</a>
-						</div>
+
 					</div>
 					<div class="row">
 						<div class="col-md-3">
@@ -68,18 +66,48 @@
 					</div>
 				</div>
 				<div role="tabpanel" class="tab-pane" id="schedule_import">
+					<form id="import_schedule">
+						<div class="form-group">
+							{% include 'fields/select_field.html' with size_per_label='3' field_label='Расписание' size_per_field='9' field_name='schedule' set=schedules default_option='Выберите расписание' class='import_schedule' %}
+						</div>
+						{% for key, value in schedule_events.items %}
+							<div class="form-group hide schedule_container {{ key.id }}">
+								{% for item in value %}
+								<label>
+									<input type="checkbox" name="{{ key.id }}-{{ item.id }}" value="{{ item.id }}" checked="checked">
+									{{ item.name }}
+								</label>
+								{% endfor %}
+							</div>
+						{% endfor %}
+						{% csrf_token %}
+						<div class="form-group">
+							<label>
+								<input type="checkbox" name="chain_import" checked="checked">Импортировать с привязкой
+							</label>
+							<span class="help-block">
+								При изменении событий владельцем расписания они так же будут изменяться и у вас
+							</span>
+							<button class="btn submit_import" type="button">Импортировать расписание</button>
+						</div>
+					</form>
 				</div>
-				<div role="tabpanel" class="tab-pane" id="schedule_export">
-				</div>
+				<!--<div role="tabpanel" class="tab-pane" id="schedule_export">
+				</div>-->
 			</div>
 		</div>
 	</div>
 </div>
 
+{% include 'windows/success_schedule.html' %}
+{% include 'windows/unsuccess_schedule.html' %}
+
 <script>
-$(function () {
+var tooltip_activate = function() {
   $('[data-toggle="tooltip"]').tooltip({html: true})
-});
+};
+
+$(tooltip_activate());
 
 $(".carousel").click(function(){
     var cur_date = new Date($(".schedule_table_date").val());
@@ -106,11 +134,33 @@ $(".carousel").click(function(){
 		});
 	$(".schedule_table_date").val(cur_date);
 
-	$(function () {
-	  $('[data-toggle="tooltip"]').tooltip({html: true})
+	$(tooltip_activate());
+});
+
+$("select.import_schedule").change(function(){
+	var key_id = $(this).val();
+	$(".schedule_container").addClass("hide");
+	$(".schedule_container." + key_id).removeClass("hide");
+});
+
+$(".submit_import").click(function(){
+	$.ajax({
+		type: "POST",
+		url: "{% url 'import_schedule' %}",
+		async: false,
+		data: $("#import_schedule").serialize(),
+		success: function(data){
+			if (data.not_success) {
+				$(".my_event").html(data.my_event);
+				$(".created_event").html(data.created_event);
+				$('#unsuccess_import').modal('show');
+			}
+			else {
+				$('#success_import').modal('show');
+			}
+    }
 	});
 });
 
 </script>
 {% endblock %}
-

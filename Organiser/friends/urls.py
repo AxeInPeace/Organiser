@@ -10,3 +10,8 @@ friends_urls = [
     url(r'^accept(?P<id>([0-9]+))$', views.accept_request, name='accept_request'),
     url(r'^decline(?P<id>([0-9]+))$', views.decline_request, name='decline_request'),
 ]
+
+import_export_urls = [
+    url(r'^import_schedule$', views.import_schedule, name='import_schedule'),
+    url(r'^export_schedule$', views.export_schedule, name='export_schedule'),
+]

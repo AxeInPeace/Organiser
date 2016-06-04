@@ -1,0 +1,23 @@
+{% extends "windows/modal_window.html" %}
+{% block modal_id %}unsuccess_import{% endblock %}
+{% block modal_title %}
+	Неудачно.
+{% endblock %}
+{% block modal_body %}
+	<p>Расписание не может быть добавлено, поскольку уже имеются события в это время</p>
+	<p>Событие <b class="my_event"></b> конфликтует с событием <b class="created_event"></b></p>
+	<div class="form-horizontal">
+		<div class="form-group">
+			<button class="btn btn-default cancel">Отменить</button>
+			<button class="btn btn-default change_event">Изменить моё событие</button>
+			<button class="btn btn-default delete_event">Удалить моё событие</button>
+		</div>
+	</div>
+
+<script>
+	$(".cancel").click(function(){
+		$('#unsuccess_import').modal('hide');
+	});
+</script>
+{% endblock %}
+

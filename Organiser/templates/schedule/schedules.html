@@ -1,0 +1,44 @@
+<form id="change_schedules" method="post" action="{% url 'change_schedules' %}">
+	<div class="form-horizontal">
+		<div class="form-group">
+			{% include 'fields/select_field.html' with size_per_label='3' size_per_field='9' set=schedules field_label='Расписание' default_option='Выберите расписание' class="choose_schedule" field_name='schedule_id' %}
+		</div>
+		<div class="form-group">
+			<div class="col-sm-3"></div>
+			<div class="col-sm-3">
+				<button class="btn btn-default delete_schedule btn-sm" type="button">Удалить расписание</button>
+			</div>
+		</div>
+	</div>
+
+	<div class="form-horizontal">
+			{% include 'fields/input_field.html' with size_per_label='3' size_per_field='9' field_label='Имя' field_type='text' field_name='name' %}
+			{% include 'fields/input_field.html' with size_per_label='3' size_per_field='9' field_label='Приоритет' field_type='number' field_name='priority' %}
+		<div class="form-group">
+			<div class="col-sm-3"></div>
+			<div class="col-sm-3">
+				<button class="btn btn-default" type="submit">Изменеить расписание</button>
+			</div>
+		</div>
+	</div>
+	{% csrf_token %}
+</form>
+
+<script>
+	$(".delete_schedule").click(function(){
+		schedule_id = $("select.choose_schedule").val();
+		if (parseInt(schedule_id) == -1)
+			return;
+		else
+			$.ajax({
+				url: "{% url 'delete_schedule' %}",
+				async: false,
+				data: {
+					schedule_id: schedule_id,
+				},
+			});
+			cur_option = $("select.choose_schedule");
+			$("select.choose_schedule :selected").remove();
+});
+</script>
+

@@ -1,7 +1,7 @@
 <div class="form-group">
 	<label class="control-label col-sm-{{ size_per_label }}">Дата</label>
 	<div class="col-sm-{{ size_per_field }}">
-		<input id="{{ field_name_date }}" data-format="YYYY-MM-DD" data-template="D MMM YYYY" name="{{ field_name_date }}" value="{{ nowdate }}" type="text">
+		<input class="{{ field_name_date }}" data-format="YYYY-MM-DD" data-template="D MMM YYYY" name="{{ field_name_date }}" value="{{ nowdate }}" type="text">
 	</div>
 </div>
 
@@ -9,7 +9,7 @@
 
 <script>
   $(function(){
-    $('#{{ field_name_date }}').combodate({
+    $('.{{ field_name_date }}').combodate({
       minYear: 2016,
 			maxYear: 2018,
     });

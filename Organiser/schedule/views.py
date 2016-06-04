@@ -3,15 +3,28 @@ from .models import *
 from .utils import *
 from .genetic import genetic
 from django.http import HttpResponseRedirect, JsonResponse
+from itertools import chain
 
 
 def get_context(request, user, date=datetime.datetime.now().date()):
     schedules = Schedule.objects.filter(user=user)
     places = Place.objects.filter(user=user)
     events = Event.objects.filter(schedule__in=schedules)
+    events_to_change = events
+    imported_events_ref = Imported_Event.objects.filter(schedule__in=schedules)
+    imported_events = Event.objects.filter(id__in=imported_events_ref.values("event"))
+
+    schedule_events = {}
+    for schedule in schedules:
+        schedule_events[schedule] = list(chain(events.filter(schedule=schedule),
+                                         imported_events.filter(id__in=imported_events_ref.filter(schedule=schedule))))
+
+    events = list(chain(events, imported_events))
     repetitions = EventRepetition.objects.filter(event__in=events)
     full_events = generate_events(repetitions, date)
-    tasks = Task.objects.filter(user=user, complete=False)
+    all_tasks = Task.objects.filter(user=user)
+    tasks = all_tasks.filter(complete=False)
+
     full_tasks = generate_tasks(tasks, date)
 
     all_events = []
@@ -27,9 +40,12 @@ def get_context(request, user, date=datetime.datetime.now().date()):
     context = {
         'schedules': schedules,
         'places': places,
+        'schedule_events': schedule_events,
         'events': all_events,
+        'events_to_change': events_to_change,
         'weekdays': weekdays,
         'tasks': tasks,
+        'all_tasks': all_tasks,
         'nowdate': nowdate.date().strftime("%Y-%m-%d"),
         'days': days,
     }
@@ -41,10 +57,10 @@ def main(request):
         context = get_context(request, request.user)
         return render(request, 'schedule/schedule.html', context)
     else:
-        return render(request, 'schedule/schedule.html')
+        return render(request, 'main_with_no_reg.html')
 
 
-def table_schedule(request):
+def render_table_schedule(request):
     to_date = datetime.date(int(request.GET.get('year')),
                             int(request.GET.get('month')) + 1,
                             int(request.GET.get('day')))
@@ -78,18 +94,23 @@ def add_task(request):
     return render(request, 'schedule/schedule.html', context)
 
 
-def add_event(request):
-    context = get_context(request, request.user)
-    context['message'] = "Событие успешно создано"
+def add_event(request, event_id=None):
     name = request.POST.get('name')
     start_time = get_datetime(request, 'start_date', 'start_time')
     end_time = get_datetime(request, 'end_date', 'end_time')
-    if correct_time(start_time) and correct_time(end_time):
+    if correct_time(start_time, end_time):
         schedule = request.POST.get('schedule')
         place = request.POST.get('place')
         try:
             repetition_info = get_repetition_info(request)
-            cur_event = Event.objects.create(name=name, schedule_id=schedule, place_id=place)
+            if event_id is None:
+                cur_event = Event.objects.create(name=name, schedule_id=schedule, place_id=place)
+            else:
+                cur_event = Event.objects.get(id=event_id)
+                cur_event.name = name
+                cur_event.schedule_id = schedule
+                cur_event.place_id = place
+                cur_event.save()
             created_repetitions = []
             try:
                 for j in range(repetition_info["amount"]):
@@ -107,19 +128,28 @@ def add_event(request):
                         created_repetitions.append(EventRepetition.objects.create(event=cur_event,
                                                    start_time=new_start_time,
                                                    end_time=new_end_time))
+                checker = check_events([cur_event], request)
+                if not checker['is_correct']:
+                    for item in created_repetitions:
+                        item.delete()
+                    if event_id is None:
+                        cur_event.delete()
+                    return JsonResponse({'not_success': True,
+                                         'created_event': checker['created_event'].name,
+                                         'my_event': checker['my_event'].name})
             except:
-                context['message'] = "Событие не может быть повторено"
                 for item in created_repetitions:
                     item.delete()
                 cur_event.delete()
-                return render(request, 'schedule/schedule.html', context)
+                return JsonResponse({'not_success': True})
 
         except:
-            context['message'] = "Событие не может быть создано"
-            return render(request, 'schedule/schedule.html', context)
+            return JsonResponse({'not_success': True})
     else:
-        context['message'] = "Неверный промежуток времени"
-    return render(request, 'schedule/schedule.html', context)
+        return JsonResponse({'not_success': True})
+    if event_id is None:
+        return JsonResponse({'not_success': False})
+    return True  # success = True for change_event
 
 
 def add_schedule(request):
@@ -145,6 +175,8 @@ def add_place(request):
 def generate_shedule(request):
     schedules = Schedule.objects.filter(user=request.user)
     events = Event.objects.filter(schedule__in=schedules)
+    imported_events = Imported_Event.objects.filter(schedule__in=schedules)
+    events = list(chain(events, imported_events.values("event")))
     repetitions = EventRepetition.objects.filter(event__in=events)
 
     tasks = list(Task.objects.filter(user=request.user, complete=False))
@@ -153,38 +185,56 @@ def generate_shedule(request):
     return render(request, 'schedule/schedule.html', context)
 
 
-def task_complete(request):
+def change_task_status(request):
     task_id = int(request.GET.get('task_id'))
     cur_task = Task.objects.get(id=task_id)
-    cur_task.complete = True
+    if cur_task.complete:
+        cur_task.complete = False
+    else:
+        cur_task.complete = True
     cur_task.save()
+    return JsonResponse({'complete': cur_task.complete})
 
 
 def change_events(request):
-    if request.method == 'GET':
-        context = get_context(request, request.user)
-        schedules = Schedule.objects.filter(user=request.user)
-        events = Event.objects.filter(schedule__in=schedules)
-        context["events"] = events
-        return render(request, 'schedule/events.html', context)
     if request.method == 'POST':
         event_id = int(request.POST.get('event_id'))
-        Event.objects.get(id=event_id).delete()
-        EventRepetition.objects.filter(event_id=event_id).delete()
-        add_event(request)
+        old_reps = list(EventRepetition.objects.filter(event_id=event_id))
+        print(old_reps)
+        success = add_event(request, event_id)
+        if success == True:
+            print(old_reps)
+            for item in old_reps:
+                item.delete()
+            return JsonResponse({'not_success': False})
+        else:
+            return success
+
+
+def change_schedules(request):
+    if request.method == 'POST':
+        schedule_id = int(request.POST.get('schedule_id'))
+        cur_schedule = Schedule.objects.get(id=schedule_id)
+        cur_schedule.name = request.POST.get('name')
+        cur_schedule.priority = request.POST.get('priority')
+        cur_schedule.save()
         return HttpResponseRedirect('/')
 
 
-def get_event(request):
-    event_id = int(request.GET.get('event_id'))
-    event = Event.objects.get(id=event_id)
-    repetitions = EventRepetition.objects.filter(event=event)
+def delete_schedule(request):
+    schedule_id = int(request.GET.get('schedule_id'))
+    Schedule.objects.get(id=schedule_id).delete()
+    Event.objects.filter(schedule_id = schedule_id).delete()
+    Imported_Event.objects.filter(schedule_id = schedule_id).delete()
+    return JsonResponse({})
 
 
 def delete_event(request):
     event_id = int(request.GET.get('event_id'))
     Event.objects.get(id=event_id).delete()
     EventRepetition.objects.filter(event_id=event_id).delete()
+    Imported_Event.objects.filter(event_id=event_id).delete()
+    return JsonResponse({})
 
 
 def change_tasks(request):
@@ -192,10 +242,10 @@ def change_tasks(request):
         task_id = int(request.POST.get('task_id'))
         Task.objects.get(id=task_id).delete()
         add_task(request)
-    context = get_context(request, request.user)
-    tasks = Task.objects.filter(user=request.user)
-    context["tasks"] = tasks
-    return render(request, 'schedule/tasks.html', context)
+        context = get_context(request, request.user)
+        tasks = Task.objects.filter(user=request.user)
+        context["tasks"] = tasks
+        return render(request, 'schedule/tasks.html', context)
 
 
 def delete_task(request):
@@ -206,9 +256,9 @@ def delete_task(request):
 def change_places(request):
     if request.method == 'POST':
         place_id = int(request.POST.get('place_change_id'))
-        Place.objects.get(id=place_id).delete()
-        name = request.POST.get('place_name')
-        Place.objects.create(name=name, user=request.user)
+        cur_place = Place.objects.get(id=place_id)
+        cur_place.name = request.POST.get('place_name')
+        cur_place.save()
     context = get_context(request, request.user)
     places = Place.objects.filter(user=request.user)
     context["places"] = places

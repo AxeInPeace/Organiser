@@ -19,4 +19,3 @@ $(".carousel").click(function(){
 		});
 	$(".schedule_table_date").val(cur_date);
 });
-

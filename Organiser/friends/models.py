@@ -19,4 +19,3 @@ class FriendshipRequest(models.Model):
     from_friend = models.ForeignKey(User, related_name='from_friend')
     to_friend = models.ForeignKey(User, related_name='to_friend')
     declined = models.BooleanField()
-

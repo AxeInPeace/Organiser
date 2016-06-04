@@ -248,3 +248,4 @@ def genetic(events, tasks):
         task.end_time = population[0].genes[i].end_time
         task.save()
         i += 1
+

@@ -1,0 +1,16 @@
+{% extends "maintemp.html" %}
+{% load staticfiles %}
+{% block includes %}
+{% endblock %}
+
+{% block title %}Органайзер{% endblock %}
+
+{% block content %}
+<div class="row">
+	<h2>Вы не зарегестирированы</h2>
+	<h2>Чтобы зарегестрироваться, перейдите по <a href="{% url 'signup' %}">ссылке</a></h2>
+	<h2>Если вы уже зарегестрировались, то <a href="{% url 'signin' %}">войдите в систему</a>, чтобы продолжить</h2>
+</div>
+
+{% endblock %}
+

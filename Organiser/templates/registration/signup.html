@@ -14,13 +14,15 @@
 {% block content %}
 <form id="signup" method="post" action="{% url 'signup' %}">
 	<div class="form-group has-feedback div-mail">
+		<data class="mail" value="bad"></data>
 		<label class="control-label">E-mail</label>
 		<input type="email" class="form-control js-mail" name="mail">
 		<span class="glyphicon glyphicon-ok form-control-feedback hide" aria-hidden="true"></span>
 		<span class="glyphicon glyphicon-remove form-control-feedback hide" aria-hidden="true"></span>
-		<span class="help-block hide">Пользователь с таким почтовым адресом уже зарегестрирован</span>
+		<span class="help-block hide">Пользователь с таким почтовым адресом уже зарегестрирован или это не e-mail адрес</span>
 	</div>
 	<div class="form-group has-feedback div-pass">
+		<data class="pass" value="bad"></data>
 		<label class="control-label">Пароль</label>
 		<input type="password" class="form-control js-pass" name="pass">
 		<span class="glyphicon glyphicon-ok form-control-feedback hide" aria-hidden="true"></span>
@@ -29,6 +31,7 @@
 		<span class="help-block hide">Пароль должен состоять не менее чем из семи символов</span>
 	</div>
 	<div class="form-group has-feedback div-repeat">
+		<data class="check" value="bad"></data>
 		<label class="control-label">Повторите пароль</label>
 		<input type="password" class="form-control js-check" name="passcheck">
 		<span class="glyphicon glyphicon-ok form-control-feedback hide" aria-hidden="true"></span>

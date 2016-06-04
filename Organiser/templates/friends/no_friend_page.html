@@ -1,0 +1,22 @@
+{% extends "maintemp.html" %}
+{% load staticfiles %}
+{% block includes %}
+{% endblock %}
+
+{% block title %}{{ friend.name }}{% endblock %}
+
+{% block content %}
+<data value="{{ friend.id }}" id="friend_id"></data>
+<div class="row">
+	<div class="col-md-1"></div>
+	<div class="col-md-8">
+		<p>Вы не можете просматривать расписание пользователя, пока он не добавил вас в друзья.</p>
+		<p>Попробуйте отправить пользователю заявку на дружбу</p>
+		<a href="/friends/send{{ friend.id }}">
+			<button class="btn"><span class="glyphicon glyphicon-plus"></span></button>
+		</a>
+	</div>
+</div>
+
+{% endblock %}
+

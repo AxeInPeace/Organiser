@@ -1,36 +1,59 @@
-<div class="row">
-	<form id="add_event" method="post" action="{% url 'add_event' %}">
-		<div class="form-horizontal">
-			{% include 'fields/input_field.html' with size_per_label='3' size_per_field='9' field_label='Имя' field_type='text' field_name='name' %}
-			<!--TODO: Target on event and visualise it on schedule -->
-			<div class="form-group">
-				<div class="col-sm-3"></div>
-				<label class="control-label col-sm-{{ size_per_label }}">Начало события</label>
-			</div>
-			{% include 'fields/date_time_field.html' with size_per_label='3' size_per_field='9' field_name_date='start_date' field_name_time='start_time' %}
-			<div class="form-group">
-				<div class="col-sm-3"></div>
-				<label class="control-label col-sm-{{ size_per_label }}">Конец события</label>
-			</div>
-			{% include 'fields/date_time_field.html' with size_per_label='3' size_per_field='9' field_name_date='end_date' field_name_time='end_time' %}
-			{% include 'fields/select_field.html' with size_per_label='3' field_label='Расписание' size_per_field='9' field_name='schedule' set=schedules help_text='Выберите из списка к какому расписанию относится событие' %}
-			{% include 'fields/select_field.html' with size_per_label='3' field_label='Место' size_per_field='9' field_name='place' set=places help_text='Выберите из списка место в котором происходит событие' class='add_place' %}
-			<div class="form-group">
-				<div class="col-sm-3"></div>
-				<div class="col-sm-9">
-					<button type="button" class="btn" data-toggle="modal" data-target="#add_place">Новое место</button>
-				</div>
-			</div>
-
-			{% include 'fields/repeat_field.html' %}
-
-			<div class="form-group">
-				<div class="col-sm-3"></div>
-				<div class="col-sm-3">
-					<button class="btn btn-default" type="submit">Добавить событие</button>
-				</div>
+<form id="add_event" method="post" action="{% url 'add_event' %}">
+	<div class="form-horizontal">
+		{% include 'fields/input_field.html' with size_per_label='3' size_per_field='9' field_label='Имя' field_type='text' field_name='name' %}
+		<!--TODO: Target on event and visualise it on schedule -->
+		<div class="form-group">
+			<div class="col-sm-3"></div>
+			<label class="control-label col-sm-{{ size_per_label }}">Начало события</label>
+		</div>
+		{% include 'fields/date_time_field.html' with size_per_label='3' size_per_field='9' field_name_date='start_date' field_name_time='start_time' %}
+		<div class="form-group">
+			<div class="col-sm-3"></div>
+			<label class="control-label col-sm-{{ size_per_label }}">Конец события</label>
+		</div>
+		{% include 'fields/date_time_field.html' with size_per_label='3' size_per_field='9' field_name_date='end_date' field_name_time='end_time' %}
+		{% include 'fields/select_field.html' with size_per_label='3' field_label='Расписание' size_per_field='9' field_name='schedule' set=schedules help_text='Выберите из списка к какому расписанию относится событие' %}
+		{% include 'fields/select_field.html' with size_per_label='3' field_label='Место' size_per_field='9' field_name='place' set=places help_text='Выберите из списка место в котором происходит событие' class='add_place' %}
+		<div class="form-group">
+			<div class="col-sm-3"></div>
+			<div class="col-sm-9">
+				<button type="button" class="btn" data-toggle="modal" data-target="#add_place">Новое место</button>
 			</div>
 		</div>
-		{% csrf_token %}
-	</form>
-</div>
+
+		{% include 'fields/repeat_field.html' %}
+
+		<div class="form-group">
+			<div class="col-sm-3"></div>
+			<div class="col-sm-3">
+				<button class="btn btn-default add_event" type="button">Добавить событие</button>
+			</div>
+		</div>
+	</div>
+	{% csrf_token %}
+</form>
+
+<script>
+$(".add_event").click(function(){
+	$.ajax({
+		type: "POST",
+		url: "{% url 'add_event' %}",
+		async: false,
+		data: $("#add_event").serialize(),
+		success: function(data){
+			if (data.not_success) {
+				$(".my_event").html(data.my_event);
+				$(".created_event").html(data.created_event);
+				$('#unsuccess_import').modal('show');
+			}
+			else {
+				$('#schedule_message').html('Событие успешно добавлено');
+			}
+    }
+	});
+	var cur_date = new Date($(".schedule_table_date").val());
+	update_schedule_table(cur_date);
+	$(tooltip_activate());
+});
+
+</script>

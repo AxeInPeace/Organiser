@@ -1,0 +1,16 @@
+{% extends "windows/modal_window.html" %}
+{% block modal_id %}success_import{% endblock %}
+{% block modal_title %}
+	Успех!
+{% endblock %}
+{% block modal_body %}
+	<p>Расписание успешно добавлено!</p>
+	<button class="btn btn-success success_import">Закрыть</button>
+
+<script>
+	$(".success_import").click(function(){
+		$('#success_import').modal('hide');
+	});
+</script>
+{% endblock %}
+

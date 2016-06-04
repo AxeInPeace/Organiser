@@ -15,10 +15,7 @@
 			<ul class="nav navbar-nav">
 				{% if user.is_authenticated %}
 				<li class="active"><a href="{% url 'main' %}">Расписание</a></li>
-				<li><a href="{% url 'change_events' %}">События</a></li>
-				<li><a href="{% url 'change_tasks' %}">Задачи</a></li>
 				<li><a href="{% url 'change_places' %}">Места</a></li>
-				<li><a href="{% url 'change_schedules' %}">Расписания</a></li>
 				<li><a href="{% url 'my_friends' %}">Друзья</a></li>
 				<!--<li><a href="">Группы</a></li>-->
 

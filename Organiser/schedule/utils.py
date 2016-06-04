@@ -1,4 +1,6 @@
 import datetime
+from .models import Schedule, Event, EventRepetition
+from django.db.models import Q
 
 
 def get_datetime(request, date_name, time_name):
@@ -10,9 +12,9 @@ def get_duration(time):
     return datetime.timedelta(minutes=cur_time.minute, hours=cur_time.hour)
 
 
-def correct_time(time):
+def correct_time(time_st, time_end):
     try:
-        if datetime.datetime(2016, 1, 1) < time < datetime.datetime(2116, 1, 1):
+        if datetime.datetime(2016, 1, 1) < time_st < datetime.datetime(2116, 1, 1) and datetime.datetime(2016, 1, 1) < time_end < datetime.datetime(2116, 1, 1) and time_st < time_end:
             return True
         else:
             return False
@@ -32,7 +34,7 @@ def get_repetition_info(request):
 
     days = []
     for i in range(7):
-        if request.POST.get('weekday'+str(i)) == str(i):
+        if request.POST.get('weekday' + str(i)) == str(i):
             days.append(i)
     rep = {
         'amount': amount,
@@ -92,7 +94,7 @@ def generate_events(repetitions, cur_date=datetime.datetime.now().date()):
     for event in events_in_cur_week:
         if event.start_time.date() == event.end_time.date():
             event_per_weekday[event.start_time.weekday()].append(
-                event_dict_create(event.event.name, event.start_time, event.end_time, 'green')
+                    event_dict_create(event.event.name, event.start_time, event.end_time, 'green')
             )
         else:
             end_of_start_day = datetime.datetime.combine(event.start_time.date(), datetime.time(23, 59, 59))
@@ -100,20 +102,20 @@ def generate_events(repetitions, cur_date=datetime.datetime.now().date()):
 
             if end_of_start_day.date() in dates:
                 event_per_weekday[end_of_start_day.weekday()].append(
-                    event_dict_create(event.event.name, event.start_time, end_of_start_day, 'green')
+                        event_dict_create(event.event.name, event.start_time, end_of_start_day, 'green')
                 )
 
             if start_of_end_day.date() in dates:
                 event_per_weekday[start_of_end_day.weekday()].append(
-                    event_dict_create(event.event.name, start_of_end_day, event.end_time, 'green')
+                        event_dict_create(event.event.name, start_of_end_day, event.end_time, 'green')
                 )
 
     for i in range(7):
         event_per_weekday[i].sort(key=lambda k: k['start_time'])
         event_per_weekday[i].append(
-            event_dict_create("None",
-                              datetime.datetime(1, 1, 1, hour=23, minute=59, second=59),
-                              datetime.datetime(1, 1, 1, hour=23, minute=59, second=59))
+                event_dict_create("None",
+                                  datetime.datetime(1, 1, 1, hour=23, minute=59, second=59),
+                                  datetime.datetime(1, 1, 1, hour=23, minute=59, second=59))
         )
 
     return event_per_weekday
@@ -137,7 +139,7 @@ def generate_tasks(tasks, cur_date=(datetime.datetime.now().date() + datetime.ti
     tasks_in_cur_week = []
 
     for task in tasks:
-        if not(task.start_time is None or task.end_time is None):
+        if not (task.start_time is None or task.end_time is None):
             task_date = task.start_time.date()
             if task_date in dates:
                 tasks_in_cur_week.append(task)
@@ -174,11 +176,24 @@ def generate_tasks(tasks, cur_date=(datetime.datetime.now().date() + datetime.ti
     for i in range(7):
         task_per_weekday[i].sort(key=lambda k: k['start_time'])
         task_per_weekday[i].append(
-            event_dict_create("None",
-                              datetime.datetime(1, 1, 1, hour=23, minute=59, second=59),
-                              datetime.datetime(1, 1, 1, hour=23, minute=59, second=59))
+                event_dict_create("None",
+                                  datetime.datetime(1, 1, 1, hour=23, minute=59, second=59),
+                                  datetime.datetime(1, 1, 1, hour=23, minute=59, second=59))
         )
 
     return task_per_weekday
 
 
+def check_events(events, request):
+    s = Schedule.objects.filter(user=request.user)
+    e = Event.objects.filter(schedule__in=s).exclude(id__in=[o.id for o in events])
+    rep = EventRepetition.objects.filter(event__in=e)
+    for event in events:
+        event_rep = EventRepetition.objects.filter(event=event)
+        for item in event_rep:
+            q = rep.filter(Q(event__in=e),
+                           Q(end_time__gt=item.start_time, start_time__lte=item.start_time) |
+                           Q(end_time__gt=item.end_time, start_time__lte=item.end_time))
+            if q.count() > 0:
+                return {'is_correct': False, 'created_event': event, 'my_event': q.first().event}
+    return {'is_correct': True}

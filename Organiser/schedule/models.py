@@ -23,8 +23,11 @@ class Event(models.Model):
     name = models.CharField(max_length=1000)
     schedule = models.ForeignKey(Schedule)
     place = models.ForeignKey(Place)
-    # period = models.DurationField()
-    # amount = models.IntegerField()
+
+
+class Imported_Event(models.Model):
+    schedule = models.ForeignKey(Schedule)
+    event = models.ForeignKey(Event)
 
 
 class EventRepetition(models.Model):
@@ -37,7 +40,7 @@ class EventRepetition(models.Model):
 
 class Task(models.Model):
     def __str__(self):
-        return self.name + ' ' + str(self.start_time) + ' ' + str(self.end_time)
+        return self.name
     name = models.CharField(max_length=1000)
     user = models.ForeignKey(User)
     longitude = models.DurationField()
