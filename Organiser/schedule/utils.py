@@ -55,7 +55,7 @@ def get_event_day(start_day, weekday):
     return new_start_day.date()
 
 
-def event_dict_create(name, start_time, end_time, color="white"):
+def event_dict_create(name, start_time, end_time, color="white", place=None):
     return {
         'name': name,
         'start_time': start_time.time(),
@@ -63,6 +63,7 @@ def event_dict_create(name, start_time, end_time, color="white"):
         'height': 0,
         'space_before': 0,
         'color': color,
+        'place': place
     }
 
 
@@ -94,7 +95,7 @@ def generate_events(repetitions, cur_date=datetime.datetime.now().date()):
     for event in events_in_cur_week:
         if event.start_time.date() == event.end_time.date():
             event_per_weekday[event.start_time.weekday()].append(
-                    event_dict_create(event.event.name, event.start_time, event.end_time, 'green')
+                    event_dict_create(event.event.name, event.start_time, event.end_time, 'green', event.event.place)
             )
         else:
             end_of_start_day = datetime.datetime.combine(event.start_time.date(), datetime.time(23, 59, 59))
@@ -102,12 +103,12 @@ def generate_events(repetitions, cur_date=datetime.datetime.now().date()):
 
             if end_of_start_day.date() in dates:
                 event_per_weekday[end_of_start_day.weekday()].append(
-                        event_dict_create(event.event.name, event.start_time, end_of_start_day, 'green')
+                        event_dict_create(event.event.name, event.start_time, end_of_start_day, 'green', event.event.place)
                 )
 
             if start_of_end_day.date() in dates:
                 event_per_weekday[start_of_end_day.weekday()].append(
-                        event_dict_create(event.event.name, start_of_end_day, event.end_time, 'green')
+                        event_dict_create(event.event.name, start_of_end_day, event.end_time, 'green', event.event.place)
                 )
 
     for i in range(7):

@@ -1,4 +1,4 @@
-# from .models import Event, Task
+from .models import PlacesForTask, Distance
 import datetime
 
 import random
@@ -7,7 +7,7 @@ import copy
 POPULATION_SIZE = 100
 NEW_GENERATION_SIZE = int(POPULATION_SIZE / 2)
 WINDOW_SIZE = datetime.timedelta(hours=2)
-ERA_AMOUNT = 500
+ERA_AMOUNT = 10
 MUTATE_RATE = 0.1
 
 DEADLINE_SATISFACTION_COEF = 100
@@ -16,18 +16,39 @@ SEQUENCE_SATISFACTION_COEF = 1
 
 
 def time_distance(ev1, ev2):
-    return ev2.start_time - ev1.end_time
+    if ev2.start_time > ev1.end_time:
+        return ev2.start_time - ev1.end_time
+    else:
+        return datetime.timedelta()
+
+
+def full_time_for_task(ev1, ev2, tsk_plc):
+    try:
+        ev1_tsk_time = Distance.objects.get(place_f_id=ev1.place, place_s=tsk_plc.place).time
+    except:
+        ev1_tsk_time = datetime.timedelta()
+    if ev1_tsk_time.total_seconds() == 0:
+        ev1_tsk_time = datetime.timedelta()
+
+    try:
+        tsk_ev2_time = Distance.objects.get(place_f_id=ev2.place, place_s=tsk_plc.place).time
+    except:
+        tsk_ev2_time = datetime.timedelta()
+    if tsk_ev2_time.total_seconds() == 0:
+        tsk_ev2_time = datetime.timedelta()
+    return time_distance(ev1, ev2) - ev1_tsk_time - tsk_ev2_time, ev1_tsk_time
 
 
 class Gene(object):
-    def __init__(self, st=datetime.datetime.now(), et=datetime.datetime.now(), lt=0, dd=0):
+    def __init__(self, st=datetime.datetime.now(), et=datetime.datetime.now(), lt=0, dd=0, plc=None):
         self.start_time = st
         self.end_time = et
         self.longitude = lt
         self.deadline = dd
+        self.place = plc
 
     def __str__(self):
-        return str(self.start_time) + str(self.end_time)
+        return self.place
 
     def set_start_time(self, st):
         self.start_time = st
@@ -41,14 +62,15 @@ class Gene(object):
 
 
 class Genome(object):
-    def __init__(self, events, tasks):
-        events.sort(key=lambda k: k.start_time)
-
+    def __init__(self, events, tasks, flag_init=True):
         self.genes = []
         self.events = []
         self.full_info = []
-
         self.left_border = datetime.datetime.now(datetime.timezone.utc)
+        if events is None:
+            return
+
+        events.sort(key=lambda k: k.start_time)
         for event in events:
             if event.start_time < self.left_border < event.end_time:
                 self.left_border = event.end_time
@@ -57,22 +79,31 @@ class Genome(object):
         self.full_info.append(Gene(self.left_border, self.left_border))
 
         for event in events:
-            self.events.append(event)
-            self.full_info.append(event)
+            if flag_init:
+                event_gene = Gene(event.start_time,
+                                  event.end_time,
+                                  event.end_time - event.start_time,
+                                  event.end_time,
+                                  event.event.place
+                                  )
+            else:
+                event_gene = event
+            self.events.append(event_gene)
+            self.full_info.append(event_gene)
 
         self.right_border = self.full_info[-1].end_time
 
         for task in tasks:
-            cur_gene = self.__put_task_into_genome__(task)
+            cur_gene = self.__put_task_into_genome__(task, not flag_init)
             self.genes.append(cur_gene)
             self.full_info.append(cur_gene)
             self.full_info.sort(key=lambda k: k.start_time)
 
     def pair_with(self, other, divider):
-        baby = Genome(self.events, self.genes)
+        baby = Genome(self.events, self.genes, False)
         baby.genes = []
         for gene in self.genes[:divider + 1]:
-            baby.genes.append(Gene(gene.start_time, gene.end_time, gene.longitude, gene.deadline))
+            baby.genes.append(Gene(gene.start_time, gene.end_time, gene.longitude, gene.deadline, gene.place))
 
         baby.full_info = []
         for event in baby.events:
@@ -83,33 +114,51 @@ class Genome(object):
         baby.full_info.sort(key=lambda k: k.start_time)
 
         for gene in other.genes[divider + 1:]:
-            cur_gene = baby.__put_task_into_genome__(gene)
+            cur_gene = baby.__put_task_into_genome__(gene, True)
             baby.genes.append(cur_gene)
             baby.full_info.append(cur_gene)
             baby.full_info.sort(key=lambda k: k.start_time)
-        #print('baby genes = ', len(baby.genes), '. baby full info = ', len(baby.full_info))
+        # print('baby genes = ', len(baby.genes), '. baby full info = ', len(baby.full_info))
         return baby
 
-    def __put_task_into_genome__(self, task):
-        start_time, end_time = self.__find_nearest_time__(task)
-        return Gene(start_time, end_time, task.longitude, task.deadline)
+    def __put_task_into_genome__(self, task, pair=False):
+        if pair:
+            cur_place = task.place
+        else:
+            cur_place = PlacesForTask.objects.get(task=task)
+        start_time, end_time = self.__find_nearest_time__(task, cur_place)
+        return Gene(start_time, end_time, task.longitude, task.deadline, cur_place)
 
-    def __find_nearest_time__(self, task):
+    def __find_nearest_time__(self, task, task_place=None):
+        if task_place is None:
+            task_place = task.place
         time = self.__choose_random_time__()
         for i in range(len(self.full_info) - 1):
             if self.full_info[i].end_time > time:
-                if time_distance(self.full_info[i], self.full_info[i + 1]) > task.longitude:
-                    return self.full_info[i].end_time, self.full_info[i].end_time + task.longitude
-        return self.full_info[-1].end_time, self.full_info[-1].end_time + task.longitude
+                time_for_task, time_for_travel = full_time_for_task(self.full_info[i],
+                                                                    self.full_info[i + 1],
+                                                                    task_place)
+                if time_for_task >= task.longitude:
+                    return self.full_info[i].end_time + time_for_travel, \
+                           self.full_info[i].end_time + task.longitude + time_for_travel
+        time_for_task, time_for_travel = full_time_for_task(self.full_info[-1], self.full_info[-1], task_place)
+        return self.full_info[-1].end_time + time_for_travel, \
+               self.full_info[-1].end_time + task.longitude + time_for_travel
 
     def __make_task(self, task):
         for i in range(1, len(self.full_info)):
             if self.full_info[i].start_time > task.start_time:
-                if time_distance(self.full_info[i - 1], self.full_info[i]) > task.longitude:
-                    start_time, end_time =  self.full_info[i - 1].end_time, self.full_info[i - 1].end_time + task.longitude
-                    return Gene(start_time, end_time, task.longitude, task.deadline)
-        start_time, end_time = self.full_info[-1].end_time, self.full_info[-1].end_time + task.longitude
-        return Gene(start_time, end_time, task.longitude, task.deadline)
+                time_for_task, time_for_travel = full_time_for_task(self.full_info[i - 1],
+                                                                    self.full_info[i + 1],
+                                                                    task.place)
+                if time_for_task > task.longitude:
+                    start_time = self.full_info[i - 1].end_time + time_for_travel
+                    end_time = self.full_info[i - 1].end_time + task.longitude + time_for_travel
+                    return Gene(start_time, end_time, task.longitude, task.deadline, task.place)
+        time_for_task, time_for_travel = full_time_for_task(self.full_info[-1], self.full_info[-1], task.place)
+        start_time, end_time = self.full_info[-1].end_time + time_for_travel, \
+                               self.full_info[-1].end_time + task.longitude + time_for_travel
+        return Gene(start_time, end_time, task.longitude, task.deadline, task.place)
 
     def __choose_random_time__(self):
         delta = self.right_border - self.left_border
@@ -130,7 +179,11 @@ class Genome(object):
         return penalty
 
     def __place_satisfaction__(self):
-        return 0
+        penalty = 0
+        for i in range(1, len(self.full_info) - 1):
+            if self.full_info[i - 1].place != self.full_info[i].place:
+                penalty += 1
+        return penalty
 
     def __sequence_satisfaction__(self):
         penalty = 0
@@ -230,7 +283,7 @@ def genetic(events, tasks):
     population = generate_population(events, tasks)
     for item in population:
         print(item.fitness_function())
-    #print('init lengths = ', len(population[0].genes), len(population[0].full_info))
+    # print('init lengths = ', len(population[0].genes), len(population[0].full_info))
 
     for i in range(ERA_AMOUNT):
         roulette = form_roulette(population)
@@ -248,4 +301,3 @@ def genetic(events, tasks):
         task.end_time = population[0].genes[i].end_time
         task.save()
         i += 1
-

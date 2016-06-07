@@ -29,7 +29,7 @@
 		<div class="form-group">
 			<div class="col-sm-3"></div>
 			<div class="col-sm-3">
-				<button class="btn btn-default" type="submit">Изменить задачу</button>
+				<button class="btn btn-default edit_task" type="button">Изменить задачу</button>
 			</div>
 		</div>
 	</div>
@@ -37,6 +37,26 @@
 </form>
 
 <script>
+	$(".edit_task").click(function(){
+		$.ajax({
+			type: "POST",
+			url: "{% url 'change_tasks' %}",
+			async: false,
+			data: $("#change_task").serialize(),
+			success: function(data){
+				if (data.success) {
+					$('#schedule_message').html('Задача успешно обновлена');
+				}
+				else {
+					$('#schedule_message').html('Задача не обновлена');
+				}
+	    }
+		});
+		var cur_date = new Date($(".schedule_table_date").val());
+		update_schedule_table(cur_date);
+		$(tooltip_activate());
+	});
+
 	$(".delete_task").click(function(){
 		task_id = $("select,choose_task").val();
 

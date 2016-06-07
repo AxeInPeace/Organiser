@@ -19,7 +19,10 @@
 		<td style="height: 400px; overflow: hidden;">
 			{% for item in event %}
 			<div style="height: {{ item.space_before }}%;overflow: hidden; background-color: white;position: static;"></div>
-			<div style="position:static;height: {{ item.height }}%;overflow: hidden; background-color: {{ item.color }}" data-toggle="tooltip" data-placement="top" title='{{ item.name }}<hr> Время начала: {{ item.start_time| date:"H i" }}<hr> Время конца:{{ item.end_time| date:"H i" }}'>
+			<div style="position:static;height: {{ item.height }}%;overflow: hidden; background-color: {{ item.color }}" data-toggle="tooltip" data-placement="top" title='{{ item.name }}<hr>
+																																				 Время начала: {{ item.start_time| date:"H i" }}<hr>
+																																				 Время конца:{{ item.end_time| date:"H i" }}<hr>
+																																				 Место: {{ item.place }}'>
 				<object>
 				<p>
 					{{ item.name | slice:":6" }}

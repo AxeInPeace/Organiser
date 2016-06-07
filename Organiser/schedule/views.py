@@ -75,23 +75,27 @@ def render_table_schedule(request):
                               context_instance=RequestContext(request))
 
 
-def add_task(request):
-    context = get_context(request, request.user)
-    context['message'] = "Задача успешно создана"
-
+def add_task(request, task_id=None):
     name = request.POST.get('name')
     duration = get_duration(request.POST.get('duration'))
     deadline = get_datetime(request, 'deadline_date', 'deadline_time')
     place = request.POST.get('place')
-
-    cur_task = Task.objects.create(name=name,
-                                   longitude=duration,
-                                   user=request.user,
-                                   deadline=deadline,
-                                   complete=False)
+    if task_id is None:
+        cur_task = Task.objects.create(name=name,
+                                       longitude=duration,
+                                       user=request.user,
+                                       deadline=deadline,
+                                       complete=False)
+    else:
+        cur_task = Task.objects.get(id=task_id)
+        cur_task.longitude = duration
+        cur_task.user = request.user
+        cur_task.deadline = deadline
+        cur_task.complete = False
+        cur_task.save()
     PlacesForTask.objects.create(task=cur_task, place_id=place)
 
-    return render(request, 'schedule/schedule.html', context)
+    return JsonResponse({'success': True})
 
 
 def add_event(request, event_id=None):
@@ -175,8 +179,9 @@ def add_place(request):
 def generate_shedule(request):
     schedules = Schedule.objects.filter(user=request.user)
     events = Event.objects.filter(schedule__in=schedules)
-    imported_events = Imported_Event.objects.filter(schedule__in=schedules)
-    events = list(chain(events, imported_events.values("event")))
+    imported_events_ref = Imported_Event.objects.filter(schedule__in=schedules)
+    imported_events = Event.objects.filter(id__in=imported_events_ref.values("event"))
+    events = list(chain(events, imported_events))
     repetitions = EventRepetition.objects.filter(event__in=events)
 
     tasks = list(Task.objects.filter(user=request.user, complete=False))
@@ -241,11 +246,11 @@ def change_tasks(request):
     if request.method == 'POST':
         task_id = int(request.POST.get('task_id'))
         Task.objects.get(id=task_id).delete()
-        add_task(request)
+        answer = add_task(request)
         context = get_context(request, request.user)
         tasks = Task.objects.filter(user=request.user)
         context["tasks"] = tasks
-        return render(request, 'schedule/tasks.html', context)
+        return answer
 
 
 def delete_task(request):
@@ -283,8 +288,8 @@ def time_for_places(request):
     fp = int(request.POST.get('time_place_1'))
     sp = int(request.POST.get('time_place_2'))
     dist = get_duration(request.POST.get('time_between_places'))
-    Distance.objects.update_or_create(place_f_id=fp, place_s_id=sp, defaults={'time':dist})
-    Distance.objects.update_or_create(place_s_id=fp, place_f_id=sp, defaults={'time':dist})
+    Distance.objects.update_or_create(place_f_id=fp, place_s_id=sp, defaults={'time': dist})
+    Distance.objects.update_or_create(place_s_id=fp, place_f_id=sp, defaults={'time': dist})
     context = get_context(request, request.user)
     places = Place.objects.filter(user=request.user)
     context["places"] = places
